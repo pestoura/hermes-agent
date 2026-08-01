@@ -87,8 +87,11 @@ agents:
     purpose: Definir experiência, fluxos e o design system BlitzHub.
 
   - id: frontend-engineer
+    runtime_name: blitzhub-cra-frontend-engineer
     wave: wave-2
-    status: pending
+    status: active
+    definition: agents/definitions/frontend-engineer.yaml
+    prompt: agents/prompts/frontend-engineer.md
     purpose: Implementar interfaces do website e da aplicação.
 
   - id: backend-domain-engineer

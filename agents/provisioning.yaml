@@ -114,12 +114,28 @@ agents:
       - test_execution
       - secret_scanning_configuration
 
+  - id: frontend-engineer
+    runtime_name: blitzhub-cra-frontend-engineer
+    definition: agents/definitions/frontend-engineer.yaml
+    prompt: agents/prompts/frontend-engineer.md
+    soul_source: agents/souls/frontend-engineer.SOUL.md
+    soul_runtime_path: /home/estourpm/.hermes/profiles/blitzhub-cra-frontend-engineer/SOUL.md
+    initial_issue: 12
+    initial_state: active
+    board_role: worker
+    capabilities:
+      - github_read_write
+      - ui_and_accessibility_validation
+      - frontend_sanitizer_validation
+      - test_execution
+
 creation_sequence:
   - cra-product-orchestrator
   - regulatory-research-engineer
   - requirements-traceability-engineer
   - solution-architect
   - devops-repository-engineer
+  - frontend-engineer
 
 per_agent_post_creation:
   - attach_shared_context
