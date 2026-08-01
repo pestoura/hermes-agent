@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import concurrent.futures
+import json
 import os
 import sqlite3
 import subprocess
@@ -15,6 +16,7 @@ from pathlib import Path
 import pytest
 
 import hermes_state
+from hermes_cli import kanban as kc
 from hermes_cli import kanban_db as kb
 
 
@@ -1583,3 +1585,332 @@ def test_bare_connect_does_not_close_on_context_exit(tmp_path):
     # Still usable after with-block exit (the leak).
     conn.execute("SELECT 1").fetchone()
     conn.close()  # explicit close to avoid leaking THIS test
+
+
+# ---------------------------------------------------------------------------
+# Structured dispatch approval tests
+# ---------------------------------------------------------------------------
+
+
+def test_structured_approval_schema_migrates(tmp_path, monkeypatch):
+    """A fresh DB must create the new approval table/indexes without changes."""
+    import os
+    from pathlib import Path
+    home = tmp_path / ".hermes"
+    home.mkdir()
+    monkeypatch.setenv("HERMES_HOME", str(home))
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
+    import hermes_cli.kanban_db as kb
+    kb.init_db()
+    with kb.connect() as conn:
+        table = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' "
+            "AND name='task_dispatch_approvals'"
+        ).fetchone()
+        assert table is not None
+        idx = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='index' "
+            "AND name='idx_approvals_task_active'"
+        ).fetchone()
+        assert idx is not None
+
+
+def test_structured_approval_cli_roundtrip(kanban_home):
+    """CLI approve + inspect path persists and reads back approval."""
+    from hermes_cli import kanban as kc
+    from hermes_cli import kanban_db as kb
+
+    with kb.connect_closing() as conn:
+        task_id = kb.create_task(conn, title="approval test", assignee="default")
+
+    out_create = kc.run_slash(
+        f"approve-dispatch {task_id} --actor supervisor --source ci --note first"
+    )
+    assert out_create.strip(), out_create
+
+    out_show = kc.run_slash(f"dispatch-approval {task_id}")
+    assert "supervisor" in out_show
+    assert "ci" in out_show
+
+    # Read structured row back directly.
+    with kb.connect_closing() as conn:
+        approval = kb.get_dispatch_approval(conn, task_id)
+    assert approval is not None
+    assert approval["approved_by"] == "supervisor"
+    assert approval["source"] == "ci"
+    assert approval["is_active"] == 1
+
+
+def test_structured_approval_idempotent_and_conflict(kanban_home):
+    """Exact repeat is idempotent; conflicting approval fails."""
+    from hermes_cli import kanban as kc
+    from hermes_cli import kanban_db as kb
+
+    with kb.connect_closing() as conn:
+        task_id = kb.create_task(conn, title="idempotent", assignee="default")
+
+    kc.run_slash(f"approve-dispatch {task_id} --actor a --source s")
+    kc.run_slash(f"approve-dispatch {task_id} --actor a --source s")
+    with kb.connect_closing() as conn:
+        rows = conn.execute(
+            "SELECT COUNT(*) AS n FROM task_dispatch_approvals "
+            "WHERE task_id = ? AND is_active = 1",
+            (task_id,),
+        ).fetchone()
+        assert rows["n"] == 1
+
+    rc = kc.run_slash(f"approve-dispatch {task_id} --actor b --source t")
+    assert rc != 0
+
+
+def test_migrate_legacy_dry_run_then_apply(kanban_home):
+    """Legacy marker migration is observable in dry-run and idempotent in apply."""
+    from hermes_cli import kanban as kc
+    from hermes_cli import kanban_db as kb
+
+    with kb.connect_closing() as conn:
+        task_id = kb.create_task(conn, title="legacy", assignee="default")
+        conn.execute(
+            "UPDATE tasks SET result = ? WHERE id = ?",
+            ("legacy-result\n" + kb._LEGACY_APPROVAL_MARKER, task_id),
+        )
+        conn.commit()
+
+    out_dry = kc.run_slash(
+        "migrate-legacy-dispatch-approvals --dry-run --json"
+    )
+    payload = json.loads(out_dry)
+    assert any(item["task_id"] == task_id for item in payload)
+
+    kc.run_slash(
+        "migrate-legacy-dispatch-approvals --apply --json"
+    )
+    with kb.connect_closing() as conn:
+        assert kb.has_active_dispatch_approval(conn, task_id) is True
+
+    # Idempotent apply does not duplicate.
+    kc.run_slash(
+        "migrate-legacy-dispatch-approvals --apply --json"
+    )
+    with kb.connect_closing() as conn:
+        approval = kb.get_dispatch_approval(conn, task_id)
+    assert approval is not None
+
+
+def test_dispatch_once_blocks_unapproved_ready_in_structured_mode(kanban_home, monkeypatch):
+    """In structured mode, dispatch_once must not spawn an unapproved ready task."""
+    from hermes_cli import kanban_db as kb
+
+    with kb.connect_closing() as conn:
+        task_id = kb.create_task(conn, title="needs approval", assignee="default")
+
+    monkeypatch.setenv("HERMES_KANBAN_DISPATCH_IN_GATEWAY", "false")
+    monkeypatch.setattr(kb, "_DISPATCH_APPROVAL_MODE_OVERRIDE", "structured")
+
+    def _noop_spawn(task, workspace, *, board=None):
+        return None
+
+    with kb.connect_closing() as conn:
+        res = kb.dispatch_once(
+            conn,
+            spawn_fn=_noop_spawn,
+            dry_run=False,
+        )
+    assert not any(s[0] == task_id for s in res.spawned)
+
+    with kb.connect_closing() as conn:
+        kb.approve_dispatch(conn, task_id, actor="supervisor", source="ci")
+
+    with kb.connect_closing() as conn:
+        res = kb.dispatch_once(
+            conn,
+            spawn_fn=_noop_spawn,
+            dry_run=False,
+        )
+    assert any(s[0] == task_id for s in res.spawned)
+
+
+# ---------------------------------------------------------------------------
+# Structured dispatch approval: extended coverage
+# ---------------------------------------------------------------------------
+
+
+def test_approve_dispatch_concurrent_same_task(kanban_home):
+    with kb.connect_closing() as conn:
+        task_id = kb.create_task(conn, title="concurrent", assignee="default")
+
+    def _approve(actor):
+        with kb.connect_closing() as conn:
+            try:
+                with kb.write_txn(conn):
+                    return kb.approve_dispatch(conn, task_id, actor=actor, source="s")
+            except Exception as exc:
+                return exc
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as pool:
+        results = list(pool.map(_approve, [f"actor-{i}" for i in range(5)]))
+
+    with kb.connect_closing() as conn:
+        active = conn.execute(
+            "SELECT COUNT(*) AS n FROM task_dispatch_approvals WHERE task_id=? AND is_active=1",
+            (task_id,),
+        ).fetchone()["n"]
+
+    successes = [r for r in results if not isinstance(r, Exception)]
+    failures = [r for r in results if isinstance(r, Exception)]
+    assert len(successes) == 1
+    assert active == 1
+    assert len(failures) == 4
+
+
+def test_multiple_inactive_approvals_one_active(kanban_home):
+    with kb.connect_closing() as conn:
+        task_id = kb.create_task(conn, title="hist", assignee="default")
+        with kb.write_txn(conn):
+            kb.approve_dispatch(conn, task_id, actor="a1", source="s1")
+        conn.execute(
+            "UPDATE task_dispatch_approvals SET is_active=0 WHERE task_id=?",
+            (task_id,),
+        )
+        conn.commit()
+        with kb.write_txn(conn):
+            kb.approve_dispatch(conn, task_id, actor="a2", source="s2")
+
+    with kb.connect_closing() as conn:
+        active = conn.execute(
+            "SELECT COUNT(*) AS n FROM task_dispatch_approvals WHERE task_id=? AND is_active=1",
+            (task_id,),
+        ).fetchone()["n"]
+        approval = kb.get_dispatch_approval(conn, task_id)
+    assert active == 1
+    assert approval is not None
+    assert approval["approved_by"] == "a2"
+
+
+def test_pending_dependency_blocks_dispatch(kanban_home, monkeypatch):
+    from hermes_cli import kanban_db as kb2
+
+    monkeypatch.setattr(kb2, "_DISPATCH_APPROVAL_MODE_OVERRIDE", "structured")
+    with kb.connect_closing() as conn:
+        parent = kb.create_task(conn, title="parent", assignee="default")
+        child = kb.create_task(conn, title="child", assignee="default", parents=[parent])
+        kb.approve_dispatch(conn, child, actor="supervisor", source="ci")
+        conn.commit()
+
+    def _noop(task, workspace, *, board=None):
+        return None
+
+    with kb.connect_closing() as conn:
+        res = kb.dispatch_once(conn, spawn_fn=_noop, dry_run=False)
+
+    assert child not in [s[0] for s in res.spawned]
+
+
+def test_active_claim_run_pid_blocks_dispatch(kanban_home, monkeypatch):
+    from hermes_cli import kanban_db as kb2
+
+    monkeypatch.setattr(kb2, "_DISPATCH_APPROVAL_MODE_OVERRIDE", "structured")
+    with kb.connect_closing() as conn:
+        task_id = kb.create_task(conn, title="claimed", assignee="default")
+        kb.claim_task(conn, task_id)
+        conn.execute(
+            "UPDATE tasks SET current_run_id=1, worker_pid=12345 WHERE id=?",
+            (task_id,),
+        )
+        conn.commit()
+
+    with kb.connect_closing() as conn:
+        allowed, reason = kb._check_dispatch_approval_allowed(conn, task_id)
+
+    assert allowed is False
+    assert reason != "no_active_dispatch_approval"
+
+
+def test_structured_mode_ignores_legacy_marker(kanban_home, monkeypatch):
+    from hermes_cli import kanban_db as kb2
+
+    monkeypatch.setattr(kb2, "_DISPATCH_APPROVAL_MODE_OVERRIDE", "structured")
+    with kb.connect_closing() as conn:
+        task_id = kb.create_task(conn, title="legacy-only", assignee="default")
+        conn.execute(
+            "UPDATE tasks SET result=? WHERE id=?",
+            (kb._LEGACY_APPROVAL_MARKER, task_id),
+        )
+        conn.commit()
+
+    with kb.connect_closing() as conn:
+        allowed, reason = kb._check_dispatch_approval_allowed(conn, task_id)
+
+    assert allowed is False
+    assert reason == "no_active_dispatch_approval"
+
+
+def test_legacy_mode_ignores_structured_approval(kanban_home, monkeypatch):
+    from hermes_cli import kanban_db as kb2
+
+    monkeypatch.setattr(kb2, "_DISPATCH_APPROVAL_MODE_OVERRIDE", "legacy")
+    with kb.connect_closing() as conn:
+        task_id = kb.create_task(conn, title="struct-only", assignee="default")
+        kb.approve_dispatch(conn, task_id, actor="a", source="s")
+        conn.commit()
+
+    with kb.connect_closing() as conn:
+        allowed, reason = kb._check_dispatch_approval_allowed(conn, task_id)
+
+    assert allowed is False
+    assert reason == "no_legacy_dispatch_approval"
+
+
+def test_compat_mode_accepts_legacy_marker(kanban_home, monkeypatch):
+    from hermes_cli import kanban_db as kb2
+
+    monkeypatch.setattr(kb2, "_DISPATCH_APPROVAL_MODE_OVERRIDE", "compat")
+    with kb.connect_closing() as conn:
+        task_id = kb.create_task(conn, title="compat-legacy", assignee="default")
+        conn.execute(
+            "UPDATE tasks SET result=? WHERE id=?",
+            (kb._LEGACY_APPROVAL_MARKER, task_id),
+        )
+        conn.commit()
+
+    with kb.connect_closing() as conn:
+        allowed, reason = kb._check_dispatch_approval_allowed(conn, task_id)
+
+    assert allowed is True
+    assert reason is None
+
+
+def test_compat_mode_accepts_structured_approval(kanban_home, monkeypatch):
+    from hermes_cli import kanban_db as kb2
+
+    monkeypatch.setattr(kb2, "_DISPATCH_APPROVAL_MODE_OVERRIDE", "compat")
+    with kb.connect_closing() as conn:
+        task_id = kb.create_task(conn, title="compat-struct", assignee="default")
+        kb.approve_dispatch(conn, task_id, actor="a", source="s")
+        conn.commit()
+
+    with kb.connect_closing() as conn:
+        allowed, reason = kb._check_dispatch_approval_allowed(conn, task_id)
+
+    assert allowed is True
+    assert reason is None
+
+
+def test_legacy_migration_old_db_fixture(kanban_home):
+    with kb.connect_closing() as conn:
+        task_id = kb.create_task(conn, title="old", assignee="default")
+        conn.execute(
+            "UPDATE tasks SET result=? WHERE id=?",
+            ("x\n" + kb._LEGACY_APPROVAL_MARKER + "\ny", task_id),
+        )
+        conn.commit()
+
+    out = kc.run_slash("migrate-legacy-dispatch-approvals --dry-run --json")
+    payload = json.loads(out)
+    assert any(item["task_id"] == task_id for item in payload)
+
+    kc.run_slash("migrate-legacy-dispatch-approvals --apply --json")
+    with kb.connect_closing() as conn:
+        assert kb.has_active_dispatch_approval(conn, task_id) is True
+        raw = conn.execute("SELECT result FROM tasks WHERE id=?", (task_id,)).fetchone()["result"]
+    assert kb._LEGACY_APPROVAL_MARKER in raw
