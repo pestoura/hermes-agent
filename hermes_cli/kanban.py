@@ -974,6 +974,38 @@ def build_parser(parent_subparsers: argparse._SubParsersAction) -> argparse.Argu
     p_gc.add_argument("--log-retention-days", type=int, default=30,
                       help="Delete worker log files older than N days (default: 30)")
 
+    # --- backfill-idempotency ---
+    p_backfill = sub.add_parser(
+        "backfill-idempotency",
+        help="Backfill idempotency_key for legacy tasks with GitHub references",
+        description=(
+            "Scan tasks missing ``idempotency_key`` and backfill a canonical "
+            "GitHub-based key from unambiguous references in task fields. "
+            "Dry-run by default; use --apply to persist changes."
+        ),
+    )
+    p_backfill.add_argument(
+        "--dry-run",
+        action="store_true",
+        default=True,
+        help="Report backfill plan without mutating the board (default)",
+    )
+    p_backfill.add_argument(
+        "--apply",
+        action="store_true",
+        help="Apply the backfill plan to the board",
+    )
+    p_backfill.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit the report as JSON",
+    )
+    p_backfill.add_argument(
+        "--repo",
+        default=None,
+        help="Restrict to tasks referencing this GitHub repo (owner/repo)",
+    )
+
     # --- repair ---
     p_repair = sub.add_parser(
         "repair",
@@ -1130,6 +1162,7 @@ def kanban_command(args: argparse.Namespace) -> int:
             "specify":  _cmd_specify,
             "decompose":  _cmd_decompose,
             "gc":       _cmd_gc,
+            "backfill-idempotency": _cmd_backfill_idempotency,
         }
         handler = handlers.get(action)
         if not handler:
@@ -1188,6 +1221,7 @@ _DELEGATED_CHILD_DENIED_ACTIONS: frozenset[str] = frozenset({
     "specify",
     "decompose",
     "gc",
+    "backfill-idempotency",
 })
 
 _DELEGATED_CHILD_DENIED_BOARD_ACTIONS: frozenset[str] = frozenset({
@@ -3213,6 +3247,34 @@ def _cmd_gc(args: argparse.Namespace) -> int:
     )
     print(f"GC complete: {removed_ws} workspace(s), "
           f"{removed_events} event row(s), {removed_logs} log file(s) removed")
+    return 0
+
+
+def _cmd_backfill_idempotency(args: argparse.Namespace) -> int:
+    """Backfill ``idempotency_key`` for legacy tasks with GitHub references."""
+    apply = bool(getattr(args, "apply", False))
+    repo = getattr(args, "repo", None)
+    try:
+        with kb.connect_closing() as conn:
+            report = kb.backfill_idempotency(conn, repo=repo, apply=apply)
+    except Exception as exc:
+        print(f"kanban backfill-idempotency: {exc}", file=sys.stderr)
+        return 1
+    if getattr(args, "json", False):
+        print(json.dumps(report, indent=2))
+        return 0
+    counts = report.get("counts", {})
+    print("Backfill idempotency" + (" (applied)" if report.get("applied") else " (dry-run)"))
+    print(f"  scanned: {report.get('before_total', 0)}")
+    print(f"  single: {counts.get('single', 0)}")
+    print(f"  duplicate_unambiguous: {counts.get('duplicate_unambiguous', 0)}")
+    print(f"  ambiguous: {counts.get('ambiguous', 0)}")
+    print(f"  conflict_existing_key: {counts.get('conflict_existing_key', 0)}")
+    print(f"  applied: {report.get('applied', False)}")
+    if report.get("ambiguous"):
+        print("  ambiguous groups:")
+        for item in report["ambiguous"]:
+            print(f"    {item.get('task_id')}: {[r.get('number') for r in item.get('refs', [])]}")
     return 0
 
 
