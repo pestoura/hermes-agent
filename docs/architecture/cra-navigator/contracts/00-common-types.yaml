@@ -1,0 +1,149 @@
+schema_version: "1.0"
+contract_id: blitzhub-cra-common-types
+namespace: com.blitzhub.cra.types
+stability: stable
+owner: solution-architect
+
+description: >
+  Tipos partilhados entre componentes da Zona A (Domain Engine, Rules Engine) e
+  Zona C (frontend-sanitizer). Todos os inputs do utilizador/IA são validados
+  contra estes schemas antes de tocar a Zona A.
+
+types:
+
+  ScopeInput:
+    description: Input para determinação de âmbito (CRA Art. 2).
+    fields:
+      productType:
+        type: enum
+        values: [software, hardware, combined]
+        required: true
+        source: "Regulation (EU) 2024/2847, Art. 2(1)"
+      economicOperator:
+        type: enum
+        values: [manufacturer, importer, distributor, retailer, other]
+        required: true
+      market:
+        type: object
+        fields:
+          country: { type: string, required: false }
+          unionMarket: { type: boolean, required: true }
+        required: true
+      productIdentifier:
+        type: string
+        required: false
+        pattern: "^[A-Za-z0-9._-]{1,128}$"
+    provenance: required
+
+  ScopeDecision:
+    description: Decisão determinística de âmbito.
+    fields:
+      inScope: { type: boolean, required: true }
+      articles: { type: array, items: Article, required: true }
+      rationale: { type: array, items: EvidenceRef, required: true }
+      rulePackage:
+        type: object
+        fields:
+          id: { type: string, required: true }
+          version: { type: string, required: true }
+          sha256: { type: string, pattern: "^[a-f0-9]{64}$" }
+          signature: { type: string, required: true }
+        required: true
+      provenance: { type: literal, value: "rules-engine" }
+      openQuestions: { type: array, items: string, required: false }
+    determinism: pure_function
+    io_side_effects: none
+
+  Article:
+    fields:
+      id: { type: string, pattern: "^Art\\.\\s*\\d+(\\.\\d+)?" }
+      title: { type: string }
+      annex: { type: string, required: false }
+      sourceRef: { type: SourceRef }
+
+  ObligationCheck:
+    fields:
+      obligationId: { type: string }
+      article: { type: Article }
+      status: { type: enum, values: [applicable, not_applicable, unknown], required: true }
+      evidenceRefs: { type: array, items: EvidenceRef }
+      provenance: { type: literal, value: "rules-engine" }
+
+  Gap:
+    fields:
+      id: { type: string }
+      description: { type: string }
+      severity: { type: enum, values: [critical, high, medium, low] }
+      suggestedRemediation: { type: string, required: false }
+      provenance: { type: literal, value: "rules-engine" }
+
+  EvidenceRef:
+    fields:
+      id: { type: string, pattern: "^[a-f0-9]{64}$" }  # sha256-based
+      source: { type: enum, values: [user_evidence, source_catalog, ai_assistant, rules_engine] }
+      confidence: { type: number, min: 0.0, max: 1.0, required: false }
+      label: { type: string, required: false }
+
+  SourceRef:
+    fields:
+      authority: { type: string }
+      title: { type: string }
+      documentIdentifier: { type: string }
+      url: { type: string }
+      publicationDate: { type: string, format: date }
+      retrievedAt: { type: string, format: date-time }
+
+  FileMeta:
+    description: Metadados de um ficheiro carregado (antes de ingestão no vault).
+    fields:
+      name: { type: string, maxLength: 255 }
+      size: { type: integer, min: 0, max: 104857600 }  # 100 MB hard cap
+      mime: { type: string }
+      lastModified: { type: string, format: date-time }
+      declaredMime: { type: string }
+
+  SafetyVerdict:
+    fields:
+      safe: { type: boolean, required: true }
+      reason: { type: string, required: false }
+      mimeVerified: { type: boolean }
+      magicMatch: { type: boolean }
+      contentType: { type: string }
+
+  EvidenceRecord:
+    fields:
+      id: { type: string, pattern: "^[a-f0-9]{64}$" }  # sha256(content)
+      sha256: { type: string, pattern: "^[a-f0-9]{64}$" }
+      mime: { type: string }
+      size: { type: integer }
+      tags: { type: array, items: string }
+      addedAt: { type: string, format: date-time }
+      provenance: { type: enum, values: [user_upload, ai_assisted] }
+      state: { type: enum, values: [active, quarantined, deleted], default: active }
+
+  ReportBundle:
+    fields:
+      markdownPath: { type: string }
+      manifest: { type: ReportManifest }
+      pdfPath: { type: string, required: false }
+
+  ReportManifest:
+    fields:
+      inputsDigest: { type: string, pattern: "^[a-f0-9]{64}$" }  # sha256 of inputs
+      templateId: { type: string }
+      templateVersion: { type: string }
+      rulePackage: { type: string }  # version
+      generatedAt: { type: string, format: date-time }
+      provenance: { type: array, items: EvidenceRef }
+      deterministicExcept: { type: array, items: string, default: [generatedAt] }
+
+  AIOutput:
+    description: Output de IA — NUNCA uma decisão. Sempre proveniência + confidence.
+    fields:
+      text: { type: string }
+      confidence: { type: number, min: 0.0, max: 1.0 }
+      provenance: { type: literal, value: "ai-assistant" }
+      traceId: { type: string }
+      grounding: { type: array, items: EvidenceRef }
+      expiresAt: { type: string, format: date-time }
+    human_review_required_below_confidence: 0.8

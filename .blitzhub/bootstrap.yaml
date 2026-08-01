@@ -1,0 +1,71 @@
+schema_version: "1.1"
+bootstrap:
+  id: BOOT-001
+  mode: reconcile
+  entrypoint_manifest: .blitzhub/bootstrap-entrypoint.yaml
+  default_agent_prompt: agents/prompts/default-bootstrap-agent.md
+  board_manifest: .blitzhub/board-provisioning.yaml
+  agent_provisioning_manifest: agents/provisioning.yaml
+  create_missing_resources: true
+  update_managed_resources: true
+  destructive_changes: false
+  stop_on_schema_error: true
+  stop_on_permission_error: true
+  runtime_resources_required: true
+  repository_files_only_are_not_completion: true
+
+sequence:
+  - validate_repository
+  - validate_manifests
+  - discover_hermes_runtime_capabilities
+  - create_github_foundation
+  - create_or_reconcile_runtime_kanban
+  - verify_runtime_kanban_by_readback
+  - create_or_reconcile_wave_1_runtime_agents
+  - run_wave_1_agent_health_checks
+  - activate_product_orchestrator
+  - create_initial_backlog
+  - reconcile_github_and_kanban
+  - dispatch_ready_work
+  - verify_minimum_active_execution
+  - publish_bootstrap_report
+  - handoff_to_product_orchestrator
+
+required_outputs:
+  - path: supervisory-runs/bootstrap/summary.md
+  - path: supervisory-runs/bootstrap/result.json
+  - path_pattern: supervisory-runs/bootstrap/agents/<agent-id>-health.json
+  - github_issue_comment: true
+
+required_runtime_resources:
+  board:
+    id: blitzhub-cra-navigator
+    verification: readback_matches_manifest
+  agents:
+    - blitzhub-cra-product-orchestrator
+    - blitzhub-cra-regulatory-research
+    - blitzhub-cra-requirements-traceability
+    - blitzhub-cra-solution-architect
+    - blitzhub-cra-devops-repository
+
+completion_gates:
+  - runtime_board_exists_and_is_verified
+  - exactly_five_wave_1_runtime_agents_exist
+  - all_five_wave_1_health_checks_pass
+  - no_wave_2_or_wave_3_agent_is_active
+  - issue_cards_2_to_8_are_materialized_once
+  - issue_4_is_dependency_blocked_by_issue_3
+  - at_least_three_non_bootstrap_tasks_are_in_progress
+  - product_orchestrator_reconciliation_passes
+  - product_orchestrator_acknowledges_handoff
+  - bootstrap_evidence_is_published
+
+constraints:
+  - do_not_delete_existing_resources
+  - do_not_force_push
+  - do_not_commit_secrets
+  - do_not_commit_customer_data
+  - use_branches_and_pull_requests
+  - do_not_activate_future_waves
+  - do_not_create_undefined_agents
+  - do_not_report_partial_success_as_complete

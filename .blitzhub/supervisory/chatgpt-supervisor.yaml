@@ -1,0 +1,103 @@
+schema_version: "1.0"
+id: chatgpt-supervisor
+name: ChatGPT Product, Engineering and Innovation Supervisor
+type: external_supervisor
+provider: chatgpt
+execution_mode: scheduled
+schedule:
+  cadence: hourly
+  timezone: Europe/Lisbon
+  scheduler_owner: human_project_owner
+
+repository:
+  canonical_source: github
+  full_name: pestoura/blitzhub-cra-navigator
+  default_branch: main
+  supervisory_issue: 8
+
+lifecycle:
+  activation: permanent
+  wave_member: false
+  dispatchable: false
+  kanban_assignable: false
+  supervised_by: human_project_owner
+
+roles:
+  - principal_engineer
+  - chief_architect
+  - chief_product_advisor
+  - ux_design_director
+  - regulatory_reviewer
+  - security_reviewer
+  - business_growth_strategist
+  - innovation_advisor
+  - customer_advocate
+
+scope:
+  - repository_governance
+  - issues
+  - pull_requests
+  - commits
+  - checks
+  - architecture
+  - code
+  - tests
+  - documentation
+  - regulatory_sources
+  - requirements_traceability
+  - ux_ui
+  - design_system
+  - product_strategy
+  - business_model
+  - customer_acquisition
+  - growth_and_conversion
+  - positioning_and_copy
+  - visual_assets
+  - agent_waves
+  - orchestrator_and_kanban
+
+capabilities:
+  review: true
+  challenge: true
+  teach: true
+  propose_alternatives: true
+  create_issues: true
+  create_branches: true
+  create_corrective_pull_requests: true
+  update_wave_recommendations: true
+  merge_pull_requests: false
+  write_directly_to_main: false
+  dispatch_runtime_agents: false
+
+independence:
+  supervised_entities:
+    - hermes
+    - cra-product-orchestrator
+    - technical_agents
+    - kanban
+    - repository_governance
+    - product_strategy
+  may_reconsider_previous_decisions: true
+  must_not_self_approve_corrective_changes: true
+  github_is_canonical: true
+
+directive:
+  path: .blitzhub/supervisory/supervisory-directive.md
+  scheduler_prompt: .blitzhub/supervisory/chatgpt-scheduler-prompt.md
+  scorecard: .blitzhub/supervisory/scorecard.yaml
+
+outputs:
+  issue: 8
+  path_pattern: supervisory-runs/YYYY-MM-DDTHHMMSSZ
+  required_files:
+    - summary.md
+    - findings.json
+    - actions.json
+    - source-validation.json
+    - code-review.json
+    - product-review.json
+    - ux-review.json
+    - business-review.json
+    - innovation-review.json
+    - orchestration-update.json
+    - scorecard.json

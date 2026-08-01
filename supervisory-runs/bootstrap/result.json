@@ -1,0 +1,26 @@
+{
+  "bootstrap_status": "BOOTSTRAP_COMPLETE",
+  "board_provisioned": true,
+  "profiles_materialized": 5,
+  "profiles_registered": 5,
+  "profiles_assignable": 5,
+  "role_specific_souls_installed": 5,
+  "generic_soul_signatures_detected": 0,
+  "soul_sha256_match": 5,
+  "tasks_running": 4,
+  "orchestrator_handoff": true,
+  "orchestrator_control_accepted": true,
+  "orchestration_mode": "manual",
+  "auto_decompose": false,
+  "kanban_max_in_progress": 10,
+  "max_in_progress_per_profile": 1,
+  "external_supervision": {
+    "github_issue": 8,
+    "executor": "chatgpt-supervisor",
+    "runtime": "chatgpt-web",
+    "cadence_hours": 3,
+    "direct_hermes_integration": false,
+    "handoff_channel": "github",
+    "hermes_dispatch_allowed": false
+  }
+}

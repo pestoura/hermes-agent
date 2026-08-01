@@ -1,0 +1,88 @@
+schema_version: "1.0"
+scale:
+  minimum: 0
+  maximum: 10
+  scoring_rule: evidence_required
+  unresolved_required_finding_caps_dimension_at: 4
+  aggregate_score_forbidden: true
+
+dimensions:
+  - id: engineering_quality
+    evidence:
+      - correctness
+      - test_depth
+      - error_handling
+      - maintainability
+  - id: architecture
+    evidence:
+      - local_first
+      - reversibility
+      - component_boundaries
+      - recovery
+  - id: regulatory_integrity
+    evidence:
+      - official_sources
+      - traceability
+      - semantic_validation
+      - interpretation_separation
+  - id: security
+    evidence:
+      - threat_model
+      - secure_defaults
+      - supply_chain
+      - key_and_update_lifecycle
+  - id: product_value
+    evidence:
+      - value_proposition
+      - target_customer_fit
+      - time_to_first_value
+      - scope_discipline
+  - id: ux_usability
+    evidence:
+      - task_completion
+      - information_architecture
+      - cognitive_load
+      - error_recovery
+  - id: accessibility
+    evidence:
+      - keyboard
+      - semantics
+      - contrast
+      - reduced_motion
+  - id: business_viability
+    evidence:
+      - customer_pain
+      - positioning
+      - pricing_assumptions
+      - cost_to_serve
+  - id: customer_acquisition_readiness
+    evidence:
+      - acquisition_path
+      - trust_signals
+      - activation
+      - conversion_measurement
+  - id: innovation
+    evidence:
+      - differentiated_value
+      - bounded_experiments
+      - simplification
+      - stop_conditions
+  - id: maintainability
+    evidence:
+      - modularity
+      - documentation
+      - migration_safety
+      - dependency_control
+  - id: delivery_reliability
+    evidence:
+      - ci_consistency
+      - reproducibility
+      - issue_pr_kanban_coherence
+      - recovery_paths
+
+required_record_fields:
+  - score
+  - evidence
+  - limitations
+  - change_since_previous_round
+  - next_improvement_condition

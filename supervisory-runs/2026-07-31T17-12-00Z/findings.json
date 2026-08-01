@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0",
+  "origin": "chatgpt-supervisor",
+  "timestamp_utc": "2026-07-31T17:12:00Z",
+  "commit_analyzed": "109d4cbc467a3205d8adb8cce8889c31302a42d8",
+  "findings": [
+    {"id":"SUP-20260731-001","classification":"REQUIRED","target":"PR #16","summary":"NIS2 CELEX, title and publication metadata are incorrect","status":"open"},
+    {"id":"SUP-20260731-002","classification":"REQUIRED","target":"PR #16","summary":"Implementing Regulation (EU) 2025/2392 publication metadata is incorrect","status":"open"},
+    {"id":"SUP-20260731-003","classification":"REQUIRED","target":"PR #16","summary":"CRA article mapping diverges from the official regulation","status":"open"},
+    {"id":"SUP-20260731-004","classification":"REQUIRED","target":"PR #17 and PR #20","summary":"Duplicate concurrent implementations of Issue #6","status":"open"},
+    {"id":"SUP-20260731-005","classification":"REQUIRED","target":"README.md","summary":"Repository status contradicted completed bootstrap evidence","status":"corrected"},
+    {"id":"SUP-20260731-006","classification":"RECOMMENDED","target":"PR #18","summary":"Perform evidence-based sampling review of ADRs, contracts and threat model","status":"open"}
+  ]
+}

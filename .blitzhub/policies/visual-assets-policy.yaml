@@ -1,0 +1,49 @@
+schema_version: "1.0"
+visual_asset_policy:
+  authority: chatgpt-supervisor
+  canonical_storage: repository
+  external_asset_discovery_by_hermes: forbidden
+
+  upstream_ui:
+    preferred: Lightswind open-source components
+    direct_product_use: false
+    promotion_target: packages/blitzhub-ui
+    version_pinning: required
+    provenance: required
+    accessibility_review: required
+    pro_components_in_public_repo: forbidden
+
+  generated_assets:
+    paths:
+      final: assets/generated
+      prompts: assets/prompts
+      manifests: assets/manifests
+      previews: assets/previews
+    prompt_required: true
+    manifest_required: true
+    preview_in_issue_or_pr: true
+    hash_required: true
+    alt_text_required: true
+
+  functional_icons:
+    use_approved_open_source_library: true
+    custom_generation_only_for_product_specific_concepts: true
+
+  motion:
+    reduced_motion_support: required
+    static_fallback: required
+    decorative_only_motion: discouraged
+
+  formats:
+    images:
+      preferred_delivery:
+        - webp
+        - avif
+    icons:
+      preferred:
+        - svg
+    animations:
+      preferred:
+        - css
+        - svg
+        - lottie

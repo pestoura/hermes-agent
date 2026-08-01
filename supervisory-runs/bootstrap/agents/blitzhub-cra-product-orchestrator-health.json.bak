@@ -1,0 +1,15 @@
+{
+  "agent_id": "product-orchestrator",
+  "runtime_name": "blitzhub-cra-product-orchestrator",
+  "runtime_id": "runtime-blitzhub-cra-product-orchestrator-20260731T163219Z",
+  "status": "healthy",
+  "timestamp": "2026-07-31T15:32:20Z",
+  "checks": {
+    "repository_read": true,
+    "issue_read": true,
+    "board_read": true,
+    "own_card_update": true,
+    "branch_creation_capability": true,
+    "pull_request_capability": true
+  }
+}

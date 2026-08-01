@@ -1,0 +1,14 @@
+{
+  "configured_previous_limit": 3,
+  "configured_new_limit": 10,
+  "desired_contract_limit": 5,
+  "effective_limit_readback": 10,
+  "per_agent_limit": 1,
+  "config_source": "/home/estourpm/.hermes/config.yaml",
+  "backup_path": "/home/estourpm/.hermes/config.yaml.backup-20260731T162300Z",
+  "reload_or_restart": "external gateway restart",
+  "running_tasks_before": 3,
+  "running_tasks_after": 4,
+  "orchestrator_task": "t_63a53028",
+  "orchestrator_status": "running"
+}

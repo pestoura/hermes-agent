@@ -1,0 +1,85 @@
+name: Engineering task
+description: Trabalho técnico executável pelos agentes Hermes
+title: "[AREA] "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema
+      description: Descrever o problema concreto e a evidência disponível.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Resultado esperado
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Critérios de aceitação
+      description: Critérios objetivos, verificáveis e testáveis.
+      placeholder: "- [ ] ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependências
+      description: Issues, decisões, componentes ou fontes necessárias.
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Âmbito e exclusões
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidência exigida
+      description: Testes, documentos, artefactos, screenshots ou relatórios.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: agent
+    attributes:
+      label: Agente responsável
+      options:
+        - CRA Product Orchestrator
+        - Regulatory Research Engineer
+        - Requirements and Traceability Engineer
+        - Solution Architect
+        - DevOps and Repository Engineer
+        - UX and Design Systems Engineer
+        - Frontend Engineer
+        - Backend and Domain Engineer
+        - Rules and Reporting Engineer
+        - Technical Documentation Engineer
+        - Quality Engineering Agent
+        - Application Security Engineer
+        - Desktop and Packaging Engineer
+        - Release Engineer
+        - ChatGPT Supervisor
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Prioridade
+      options:
+        - Critical
+        - High
+        - Medium
+        - Low
+    validations:
+      required: true

@@ -1,0 +1,73 @@
+schema_version: "1.0"
+contract_id: blitzhub-cra-rules-engine
+namespace: com.blitzhub.cra.rules
+stability: stable
+owner: rules-reporting-engineer
+
+description: >
+  Interface PÚBLICA do Rules Engine. O motor é uma biblioteca PURA: sem I/O, sem
+  efeitos colaterais, determinístico. Todas as decisões regulamentares proveniem daqui.
+  Fonte de verdade: catálogo de fontes validado (Issue #3) + schema de requisitos (Issue #4).
+
+inputs:
+  evaluateScopeCRA:
+    type: ScopeInput
+    schema_ref: contracts/00-common-types.yaml#ScopeInput
+    required: [productType, economicOperator, market]
+  listApplicableArticles:
+    type: ScopeInput
+  checkObligations:
+    type: AssessmentInput
+    description: "Artefactos do produto para verificação de obrigações"
+
+outputs:
+  ScopeDecision:
+    schema_ref: contracts/00-common-types.yaml#ScopeDecision
+    guarantees:
+      - pure_function
+      - deterministic_for_fixed_rule_package
+      - no_io_side_effects
+      - no_external_calls
+      - provenance_literal_rules_engine
+  Article[]:
+    provenance: rules-engine
+  ObligationCheck[]:
+    provenance: rules-engine
+  RuleSetMeta:
+    fields:
+      rulePackageId: { type: string }
+      version: { type: string }
+      sourceRefs: { type: array, items: SourceRef }
+      sha256: { type: string }
+      signature: { type: string }
+      loadedAt: { type: string, format: date-time }
+      trusted: { type: boolean }
+
+rule_package_contract:
+  format: "rules/v<semver>/"
+  contents:
+    - cra-rules.yaml
+    - manifest.json
+    - manifest.json.sha256
+  manifest_schema:
+    version: { type: string, required: true }
+    schemaVersion: { type: string, required: true }
+    sourceRefs: { type: array, items: SourceRef, required: true }
+    integrityHash: { type: string, pattern: "^[a-f0-9]{64}$", required: true }
+    signature: { type: string, required: true }
+    signatureAlgorithm: { type: literal, value: "ed25519" }
+  verification_on_load:
+    - verify_integrity_hash
+    - verify_signature_with_embedded_public_key
+    - reject if verification fails (engine refuses to operate)
+
+determinism_contract:
+  - "For a fixed rulePackage version + input, output is byte-identical (except timing metadata)."
+  - "Timing metadata is excluded from golden test comparison."
+  - "Open questions return as ScopeDecision.openQuestions, never as a fabricated answer."
+
+ai_separation:
+  - "The Rules Engine SHALL NOT import, call, or read output from the AI Assistant."
+  - "The Domain Engine MAY pass AI-summarised text to the Rules Engine only as EvidenceRef"
+  - "  with source=ai_assistant — but the decision logic NEVER uses confidence as a gating factor."
+  - "Violation of this contract fails build via static import check."

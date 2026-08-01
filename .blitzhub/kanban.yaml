@@ -1,0 +1,91 @@
+schema_version: "1.1"
+provisioning_manifest: .blitzhub/board-provisioning.yaml
+board:
+  id: blitzhub-cra-navigator
+  name: BlitzHub — CRA Navigator
+  canonical_source: github
+  purpose: Operational queue for Hermes agents
+  runtime_object_required: true
+  verify_by_readback: true
+
+columns:
+  - Inbox
+  - Backlog
+  - Ready
+  - In Progress
+  - Pull Request
+  - Supervisory Review
+  - Rework
+  - Ready to Merge
+  - Done
+  - Blocked
+  - Deferred
+
+required_fields:
+  - github_repository
+  - github_issue
+  - github_issue_url
+  - github_pull_request
+  - work_type
+  - wave
+  - owner_agent
+  - priority
+  - dependencies
+  - acceptance_status
+  - evidence_status
+  - supervisor_disposition
+  - idempotency_key
+  - last_reconciled_at
+  - dispatch_approval
+
+rules:
+  no_untracked_work: true
+  github_issue_required: true
+  one_card_per_github_issue: true
+  pull_request_required_for_changes: true
+  done_requires_merged_or_documented_no_code_outcome: true
+  inactive_wave_assignment_forbidden: true
+  runtime_board_readback_required: true
+
+transitions:
+  - id: ready_to_in_progress
+    from: Ready
+    to: In Progress
+    requires:
+      - dependencies_resolved
+      - assigned_agent_active
+      - assigned_agent_healthy
+      - definition_of_ready_met
+
+  - id: in_progress_to_pull_request
+    from: In Progress
+    to: Pull Request
+    requires:
+      - pull_request_open
+      - evidence_declared
+
+  - id: pull_request_to_supervisory_review
+    from: Pull Request
+    to: Supervisory Review
+    requires:
+      - required_checks_completed
+
+  - id: supervisory_review_to_rework
+    from: Supervisory Review
+    to: Rework
+    when:
+      - required_finding_exists
+
+  - id: supervisory_review_to_ready_to_merge
+    from: Supervisory Review
+    to: Ready to Merge
+    requires:
+      - no_required_findings_open
+      - definition_of_done_met
+
+  - id: ready_to_merge_to_done
+    from: Ready to Merge
+    to: Done
+    requires:
+      - pull_request_merged_or_documented_no_code_outcome
+      - github_issue_completion_evidence_present

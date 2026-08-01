@@ -1,0 +1,319 @@
+schema_version: "1.0"
+metadata:
+  title: BlitzHub CRA Navigator — Threat Model
+  owner: blitzhub-cra-solution-architect
+  issue: 5
+  method: STRIDE + trust-zones
+  last_reviewed: 2026-07-31
+  status: baseline
+
+trust_zones:
+  - id: TZ-C
+    name: "UI Renderer + frontend-sanitizer"
+    description: "Untrusted input from user / AI"
+    trust_level: untrusted
+    contains: [frontend-sanitizer, UI renderer]
+  - id: TZ-A
+    name: "Domain Engine + Rules Engine"
+    description: "Trusted core; deterministic regulatory logic"
+    trust_level: trusted_core
+    contains: [domain-engine, rules-engine]
+  - id: TZ-B
+    name: "Local Store + Evidence Vault"
+    description: "Encrypted-at-rest persistence"
+    trust_level: protected_at_rest
+    contains: [local-store, evidence-vault, crypto-key-provider]
+  - id: TZ-D
+    name: "Update Service + AI Assistant"
+    description: "External / optional boundary"
+    trust_level: untrusted_optional
+    contains: [update-service, ai-assistant, local-llm-runtime]
+  - id: TZ-OS
+    name: "Windows OS"
+    description: "Underlying operating system (shared)"
+    trust_level: untrusted_shared
+    contains: []
+
+threats:
+  - id: T-FILEUP
+    name: "Malicious uploaded files"
+    category: [spoofing, tampering]
+    zone: TZ-C
+    attacker: "End user (malicious or negligent)"
+    impact: "Arbitrary code execution, path traversal, MIME spoofing"
+    severity: HIGH
+    likelihood: medium
+    controls:
+      - id: C-FILEUP-1
+        description: "Magic-byte verification of uploaded files"
+        adr: ADR-009
+        zone: TZ-B
+      - id: C-FILEUP-2
+        description: "Allowlist + blocklist of file types and extensions"
+        zone: TZ-B
+    verification:
+      - test: mime_spoof_detected
+      - test: path_traversal_rejected
+      - test: zip_bomb_limit
+    blocks_mvp: false
+    rationale: "Architecture defines validation pipeline; implementation is deferred to v1 implementation wave."
+
+  - id: T-PATHTRAVERSAL
+    name: "Path traversal in evidence vault"
+    category: [tampering, information_disclosure]
+    zone: TZ-C
+    attacker: "Malicious filename in upload"
+    impact: "Write/read outside vault boundary"
+    severity: HIGH
+    likelihood: medium
+    controls:
+      - id: C-PATH-1
+        description: "Leaf-only filename reduction; reject .., /, backslash, NUL, unicode escapes"
+        zone: TZ-B
+      - id: C-PATH-2
+        description: "Content-addressed storage (SHA-256 + safe extension)"
+        zone: TZ-B
+    verification:
+      - test: path_traversal_rejected
+      - test: content_addressing_idempotent
+    blocks_mvp: false
+
+  - id: T-ARCHIVE
+    name: "Archive extraction abuse (zip-bomb / traversal)"
+    category: [denial_of_service, tampering]
+    zone: TZ-C
+    attacker: "Malicious archive upload"
+    impact: "Disk exhaustion, overwrite via member paths"
+    severity: MEDIUM
+    likelihood: low
+    controls:
+      - id: C-ARCH-1
+        description: "Extraction quotas: max 200MB total, 10000 members, depth 5"
+        zone: TZ-B
+      - id: C-ARCH-2
+        description: "Re-validate each member with validateSafety"
+        zone: TZ-B
+      - id: C-ARCH-3
+        description: "Sanitize member paths to content-addressed leaf names"
+        zone: TZ-B
+    verification:
+      - test: zip_bomb_limit
+    blocks_mvp: false
+
+  - id: T-AI
+    name: "AI contamination of regulatory decisions"
+    category: [tampering, repudiation]
+    zone: TZ-A
+    attacker: "Prompt injection or malicious AI output"
+    impact: "False regulatory conclusion presented as authoritative"
+    severity: CRITICAL
+    likelihood: low
+    controls:
+      - id: C-AI-1
+        description: "Hard separation: AI output never reaches Rules Engine"
+        adr: ADR-003
+        zone: TZ-A
+      - id: C-AI-2
+        description: "Provenance + confidence on every AI output"
+        zone: TZ-A
+      - id: C-AI-3
+        description: "Confidence < 0.8 requires human confirmation"
+        zone: TZ-C
+    verification:
+      - test: ai_output_never_reaches_rule_decision
+      - test: confidence_below_threshold_requires_human
+    blocks_mvp: true
+    rationale: "MVP must ship with deterministic core proven; AI is opt-in assistance only."
+
+  - id: T-DATASTORE
+    name: "Local data exposure"
+    category: [information_disclosure]
+    zone: TZ-B
+    attacker: "Physical or logical access to host disk by third party"
+    impact: "Access to evidence files, decisions, rule package metadata"
+    severity: HIGH
+    likelihood: medium
+    controls:
+      - id: C-DS-1
+        description: "SQLCipher AES-256-GCM at rest"
+        adr: ADR-005
+        zone: TZ-B
+      - id: C-DS-2
+        description: "Master key stored in Windows DPAPI (per-user)"
+        adr: ADR-005
+        zone: TZ-B
+      - id: C-DS-3
+        description: "Data folder ACL'd to Windows user account"
+        zone: TZ-OS
+    verification:
+      - test: store_encrypted_at_rest
+      - check: inspect_folder_aces
+    blocks_mvp: false
+
+  - id: T-SECRETS
+    name: "Secrets leakage"
+    category: [information_disclosure]
+    zone: TZ-A
+    attacker: "Developer, CI logs, public repository"
+    impact: "Master key, license keys exposed"
+    severity: CRITICAL
+    likelihood: medium
+    controls:
+      - id: C-SEC-1
+        description: "No secrets in repository; master key in DPAPI only"
+        policy: public-repository-policy.yaml
+        zone: TZ-B
+      - id: C-SEC-2
+        description: "Secret scanning in CI"
+        zone: TZ-D
+      - id: C-SEC-3
+        description: "Build-time check scans config/*.json for secrets"
+        zone: TZ-A
+    verification:
+      - check: secret_scanning_in_ci
+      - test: config_never_contains_secrets_at_build
+    blocks_mvp: false
+
+  - id: T-REPORT-INJECTION
+    name: "Report injection"
+    category: [spoofing, tampering]
+    zone: TZ-A
+    attacker: "Unsanitized user input or AI text in report output"
+    impact: "Fraudulent report that appears authoritative"
+    severity: MEDIUM
+    likelihood: low
+    controls:
+      - id: C-REP-1
+        description: "Template engine with default escaping"
+        zone: TZ-A
+      - id: C-REP-2
+        description: "AI output sanitized before inclusion"
+        zone: TZ-C
+      - id: C-REP-3
+        description: "inputs_digest + provenance[] in report manifest"
+        zone: TZ-A
+    verification:
+      - test: report_is_deterministic_excluding_timestamp
+      - test: report_injection_field_sanitized
+    blocks_mvp: false
+
+  - id: T-DEPCOMP
+    name: "Dependency compromise (supply chain)"
+    category: [tampering, denial_of_service]
+    zone: TZ-D
+    attacker: "Compromised npm/native module"
+    impact: "Arbitrary code execution, data exfiltration"
+    severity: HIGH
+    likelihood: medium
+    controls:
+      - id: C-DEP-1
+        description: "Lockfile pinned and committed; npm audit in CI"
+        policy: quality-gates.yaml#code.dependency_review
+        zone: TZ-D
+      - id: C-DEP-2
+        description: "SBOM generated for release"
+        zone: TZ-D
+      - id: C-DEP-3
+        description: "asar integrity verified at runtime"
+        zone: TZ-A
+    verification:
+      - check: npm_audit_high_blocked
+      - check: sbom_in_release
+    blocks_mvp: false
+
+  - id: T-UPDATE
+    name: "Unsafe update mechanism"
+    category: [tampering, elevation_of_privilege]
+    zone: TZ-D
+    attacker: "MITM or compromised release source"
+    impact: "Installation of malicious binary"
+    severity: CRITICAL
+    likelihood: low
+    controls:
+      - id: C-UPD-1
+        description: "SHA-256 of asset compared to release manifest"
+        adr: ADR-006
+        zone: TZ-D
+      - id: C-UPD-2
+        description: "Signature verified with embedded trusted public key"
+        adr: ADR-006
+        zone: TZ-D
+      - id: C-UPD-3
+        description: "Download to temp/ only; user opt-in to apply"
+        zone: TZ-D
+    verification:
+      - test: update_rejected_without_signature
+    blocks_mvp: false
+
+  - id: T-RULEPKG
+    name: "Integrity of regulatory rule packages"
+    category: [tampering]
+    zone: TZ-A
+    attacker: "User or attacker replacing the rule package"
+    impact: "False regulatory decisions"
+    severity: CRITICAL
+    likelihood: low
+    controls:
+      - id: C-RULE-1
+        description: "Signed manifest verified on load"
+        adr: ADR-006
+        zone: TZ-A
+      - id: C-RULE-2
+        description: "Rule package updates only via Update Service (Fluxo 8)"
+        zone: TZ-D
+      - id: C-RULE-3
+        description: "No user-supplied rule packages accepted"
+        zone: TZ-A
+    verification:
+      - test: rule_package_tamper_detected
+    blocks_mvp: true
+    rationale: "MVP rule-package boundary must be proven locked-down before any assessment can be trusted."
+
+  - id: T-WIN-PRIV
+    name: "Windows privilege boundary"
+    category: [elevation_of_privilege]
+    zone: TZ-OS
+    attacker: "Lower-privilege process attempting escalation"
+    impact: "Cross-user data access"
+    severity: MEDIUM
+    likelihood: low
+    controls:
+      - id: C-WIN-1
+        description: "App runs as standard user (no runas admin in MVP)"
+        zone: TZ-OS
+      - id: C-WIN-2
+        description: "Data folder in %LOCALAPPDATA% with per-user ACL"
+        zone: TZ-OS
+    verification:
+      - check: privilege_boundary_smoke_test
+    blocks_mvp: false
+
+  - id: T-BACKUP
+    name: "Backup confidentiality and integrity"
+    category: [information_disclosure, tampering]
+    zone: TZ-B
+    attacker: "Third party with access to backup file"
+    impact: "Unauthorized access or restore of tampered data"
+    severity: HIGH
+    likelihood: low
+    controls:
+      - id: C-BACK-1
+        description: "Backup encrypted with user key"
+        zone: TZ-B
+      - id: C-BACK-2
+        description: "SHA-256 integrity hash verified before restore"
+        zone: TZ-B
+      - id: C-BACK-3
+        description: "Password-derived export key optional for offline backup"
+        adr: ADR-005
+        zone: TZ-B
+    verification:
+      - test: backup_integrity_verified
+      - test: restore_rejects_corrupt
+    blocks_mvp: false
+
+risk_matrix_summary:
+  critical: [T-AI, T-SECRETS, T-UPDATE, T-RULEPKG]
+  high: [T-FILEUP, T-PATHTRAVERSAL, T-DATASTORE, T-DEPCOMP, T-BACKUP]
+  medium: [T-ARCHIVE, T-REPORT-INJECTION, T-WIN-PRIV]
+  mvp_blocking: [T-AI, T-RULEPKG]

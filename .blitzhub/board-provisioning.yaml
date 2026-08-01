@@ -1,0 +1,218 @@
+schema_version: "1.0"
+resource:
+  kind: hermes_kanban_board
+  id: blitzhub-cra-navigator
+  name: "BlitzHub — CRA Navigator"
+  workspace: blitzhub
+  project: cra-navigator
+  ownership: cra-product-orchestrator
+  canonical_source: github
+  reconciliation_mode: bidirectional_with_github_authoritative
+
+provisioning:
+  action: create_or_reconcile
+  idempotency_key: board:blitzhub:cra-navigator
+  destructive_changes: forbidden
+  verify_after_write: true
+  required_runtime_object: true
+  files_only_implementation_is_failure: true
+
+columns:
+  - id: inbox
+    name: Inbox
+    purpose: Eventos ainda não normalizados numa Issue executável.
+  - id: backlog
+    name: Backlog
+    purpose: Issues válidas, mas ainda não prontas.
+  - id: ready
+    name: Ready
+    purpose: Trabalho que cumpre a Definition of Ready e pode ser atribuído.
+  - id: in_progress
+    name: In Progress
+    purpose: Trabalho atualmente executado por um agente ativo.
+  - id: pull_request
+    name: Pull Request
+    purpose: Implementação submetida numa PR e checks em execução.
+  - id: supervisory_review
+    name: Supervisory Review
+    purpose: Entrega pronta para revisão independente do ChatGPT.
+  - id: rework
+    name: Rework
+    purpose: Alterações obrigatórias identificadas em checks ou supervisão.
+  - id: ready_to_merge
+    name: Ready to Merge
+    purpose: Todos os gates obrigatórios estão cumpridos.
+  - id: done
+    name: Done
+    purpose: Resultado integrado ou conclusão documental comprovada.
+  - id: blocked
+    name: Blocked
+    purpose: Impedimento real com causa e condição de desbloqueio.
+  - id: deferred
+    name: Deferred
+    purpose: Trabalho adiado de forma explícita e reversível.
+
+required_card_fields:
+  - id: github_repository
+    type: string
+    required: true
+    default: pestoura/blitzhub-cra-navigator
+  - id: github_issue
+    type: integer
+    required: true
+  - id: github_issue_url
+    type: url
+    required: true
+  - id: github_pull_request
+    type: integer_or_null
+    required: true
+  - id: work_type
+    type: enum
+    required: true
+    values:
+      - bootstrap
+      - research
+      - requirements
+      - architecture
+      - orchestration
+      - devops
+      - design
+      - frontend
+      - backend
+      - rules
+      - documentation
+      - quality
+      - security
+      - packaging
+      - release
+      - visual
+      - bug
+      - improvement
+  - id: wave
+    type: enum
+    required: true
+    values: [wave-1, wave-2, wave-3, external]
+  - id: owner_agent
+    type: string
+    required: true
+  - id: priority
+    type: enum
+    required: true
+    values: [critical, high, medium, low]
+  - id: dependencies
+    type: issue_number_list
+    required: true
+  - id: acceptance_status
+    type: enum
+    required: true
+    values: [not_evaluated, incomplete, satisfied]
+  - id: evidence_status
+    type: enum
+    required: true
+    values: [missing, partial, complete]
+  - id: supervisor_disposition
+    type: enum
+    required: true
+    values: [not_reviewed, required, recommended, optimization, experimental, accepted]
+  - id: idempotency_key
+    type: string
+    required: true
+  - id: last_reconciled_at
+    type: datetime
+    required: true
+
+card_conventions:
+  title: "[<issue-key>] <github-issue-title>"
+  idempotency_key: "github:pestoura/blitzhub-cra-navigator:issue:<number>"
+  one_card_per_issue: true
+  github_issue_required: true
+  untracked_cards_forbidden: true
+  card_description_must_link_issue: true
+  idempotency_enforcement: |
+    Materialization must use idempotency_key=github:pestoura/blitzhub-cra-navigator:issue:<number>.
+    On collision with an existing card for the same repo+issue, reconcile to the existing card,
+    emit an audit event, and never create a duplicate silently. Legacy cards without this key
+    must be backfilled during reconciliation.
+
+initial_cards:
+  - issue: 2
+    work_type: bootstrap
+    wave: wave-1
+    owner_agent: cra-product-orchestrator
+    priority: critical
+    initial_column: in_progress
+    dependencies: []
+  - issue: 3
+    work_type: research
+    wave: wave-1
+    owner_agent: regulatory-research-engineer
+    priority: critical
+    initial_column: ready
+    dependencies: []
+  - issue: 4
+    work_type: requirements
+    wave: wave-1
+    owner_agent: requirements-traceability-engineer
+    priority: critical
+    initial_column: backlog
+    dependencies: [3]
+  - issue: 5
+    work_type: architecture
+    wave: wave-1
+    owner_agent: solution-architect
+    priority: critical
+    initial_column: ready
+    dependencies: []
+  - issue: 6
+    work_type: devops
+    wave: wave-1
+    owner_agent: devops-repository-engineer
+    priority: critical
+    initial_column: ready
+    dependencies: []
+  - issue: 7
+    work_type: orchestration
+    wave: wave-1
+    owner_agent: cra-product-orchestrator
+    priority: critical
+    initial_column: ready
+    dependencies: []
+  - issue: 8
+    work_type: improvement
+    wave: external
+    owner_agent: chatgpt-supervisor
+    priority: critical
+    initial_column: supervisory_review
+    dependencies: []
+
+views:
+  - id: main-flow
+    name: Main Flow
+    filter: all
+  - id: wave-1-foundation
+    name: Wave 1 — Foundation
+    filter: "wave == wave-1"
+  - id: supervisory-findings
+    name: Supervisory Findings
+    filter: "supervisor_disposition in [required,recommended,optimization,experimental]"
+  - id: blocked-and-deferred
+    name: Blocked and Deferred
+    filter: "column in [blocked,deferred]"
+
+wip_limits:
+  in_progress:
+    global: 5
+    per_agent: 1
+  pull_request:
+    global: 8
+  rework:
+    global: 8
+
+bootstrap_acceptance:
+  - runtime_board_exists
+  - exact_columns_exist_in_order
+  - required_fields_exist
+  - initial_cards_exist_once
+  - initial_card_owners_match_active_agents
+  - ready_cards_meet_definition_of_ready
+  - board_readback_matches_manifest

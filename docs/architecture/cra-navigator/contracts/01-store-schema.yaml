@@ -1,0 +1,242 @@
+schema_version: "1.0"
+contract_id: blitzhub-cra-store-schema
+namespace: com.blitzhub.cra.store
+stability: stable
+owner: backend-domain-engineer
+
+description: >
+  Schema do Local Store (SQLCipher). Versão MAJOR.MINOR.PATCH no header da base.
+  Migrations em migrations/<from>-<to>.sql. Breaking changes = MAJOR bump.
+
+current_version: "1.0.0"
+
+tables:
+
+  scopes:
+    description: "Decisões de âmbito do produto (CRA Art. 2)"
+    columns:
+      scope_id:
+        type: text
+        primary_key: true
+        not_null: true
+        note: "sha256 scope input"
+      input_json:
+        type: text
+        not_null: true
+        note: "ScopeInput serializado"
+      decision_json:
+        type: text
+        not_null: true
+        note: "ScopeDecision serializado"
+      rule_package:
+        type: text
+        not_null: true
+        note: "version"
+      created_at:
+        type: timestamptz
+        not_null: true
+        default: now()
+      updated_at:
+        type: timestamptz
+        not_null: true
+    indexes:
+      - idx_scopes_rule_package
+      - idx_scopes_created
+
+  assessments:
+    description: "Resultados de avaliação por produto"
+    columns:
+      assessment_id:
+        type: text
+        primary_key: true
+        not_null: true
+      scope_id:
+        type: text
+        not_null: true
+        foreign_key: scopes.scope_id
+      input_json:
+        type: text
+        not_null: true
+      result_json:
+        type: text
+        not_null: true
+      rule_package:
+        type: text
+        not_null: true
+      created_at:
+        type: timestamptz
+        not_null: true
+        default: now()
+      updated_at:
+        type: timestamptz
+        not_null: true
+    indexes:
+      - idx_assessments_scope
+      - idx_assessments_rule_package
+
+  evidence_meta:
+    description: "Metadados de evidências (binário no vault, não aqui)"
+    columns:
+      evidence_id:
+        type: text
+        primary_key: true
+        not_null: true
+        note: "sha256(content)"
+      sha256:
+        type: text
+        not_null: true
+      mime:
+        type: text
+        not_null: true
+      size:
+        type: integer
+        not_null: true
+      original_name:
+        type: text
+        not_null: true
+        note: "metadado apenas, não usado como path"
+      tags:
+        type: jsonb
+      added_at:
+        type: timestamptz
+        not_null: true
+        default: now()
+      provenance:
+        type: text
+        not_null: true
+        values: [user_upload, ai_assisted]
+      state:
+        type: text
+        not_null: true
+        default: active
+        values: [active, quarantined, deleted]
+      scope_id:
+        type: text
+        foreign_key: scopes.scope_id
+      assessment_id:
+        type: text
+        foreign_key: assessments.assessment_id
+    indexes:
+      - idx_evidence_scope
+      - idx_evidence_state
+      - idx_evidence_sha256
+
+  rule_package_meta:
+    description: "Meta do rule package carregado (não contém as regras)"
+    columns:
+      id:
+        type: text
+        not_null: true
+      version:
+        type: text
+        not_null: true
+      sha256:
+        type: text
+        not_null: true
+      signature:
+        type: text
+        not_null: true
+      loaded_at:
+        type: timestamptz
+        not_null: true
+      trusted:
+        type: boolean
+        not_null: true
+        default: true
+    primary_key: [id, version]
+
+  decisions_log:
+    description: "Append-only log de decisões e outputs de IA (não mutáveis)"
+    columns:
+      log_id:
+        type: text
+        primary_key: true
+        not_null: true
+        note: "uuidv7"
+      trace_id:
+        type: text
+        not_null: true
+      provenance:
+        type: text
+        not_null: true
+        values: [rules_engine, ai_assistant, user]
+      confidence:
+        type: real
+        note: "só para AI"
+      decision_json:
+        type: text
+      evidence_refs:
+        type: jsonb
+      created_at:
+        type: timestamptz
+        not_null: true
+        default: now()
+    indexes:
+      - idx_decisions_trace
+      - idx_decisions_provenance
+
+  report_manifests:
+    description: "Metadados de relatórios gerados"
+    columns:
+      report_id:
+        type: text
+        primary_key: true
+        not_null: true
+        note: "sha256(manifest)"
+      scope_id:
+        type: text
+        not_null: true
+        foreign_key: scopes.scope_id
+      inputs_digest:
+        type: text
+        not_null: true
+      template_id:
+        type: text
+        not_null: true
+      generated_at:
+        type: timestamptz
+        not_null: true
+        default: now()
+      provenance:
+        type: jsonb
+    indexes:
+      - idx_reports_scope
+
+  migrations_log:
+    description: "Histórico de migrações aplicadas"
+    columns:
+      version:
+        type: text
+        not_null: true
+      applied_at:
+        type: timestamptz
+        not_null: true
+        default: now()
+      steps:
+        type: jsonb
+      ok:
+        type: boolean
+        not_null: true
+    primary_key: [version]
+
+  user_prefs:
+    description: "Preferências não-sensíveis (integridade verificada)"
+    columns:
+      key:
+        type: text
+        primary_key: true
+        not_null: true
+      value:
+        type: text
+        not_null: true
+      mac:
+        type: text
+        not_null: true
+        note: "HMAC por linha"
+    integrity: hmac_sha256_with_store_key
+    encryption: none
+    note: "intencionalmente plaintext; integrity-protegido apenas"
+
+schema_footer_mac:
+  description: "HMAC-SHA256 dos metadados do schema version, para detectar tampering"
+  key: "derived_from_master_key"

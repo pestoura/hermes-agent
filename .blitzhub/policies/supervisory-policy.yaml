@@ -1,0 +1,144 @@
+schema_version: "1.1"
+supervisory_controller:
+  id: chatgpt-supervisor
+  manifest: .blitzhub/supervisory/chatgpt-supervisor.yaml
+  directive: .blitzhub/supervisory/supervisory-directive.md
+  cadence_hours: 1
+  external: true
+  permanent: true
+  dispatchable: false
+  wave_member: false
+
+  scope:
+    - issues
+    - pull_requests
+    - comments
+    - commits
+    - checks
+    - source_catalog
+    - requirements
+    - architecture
+    - code
+    - tests
+    - documentation
+    - security
+    - visual_assets
+    - agent_waves
+    - product_strategy
+    - ux_ui
+    - accessibility
+    - business_model
+    - customer_acquisition
+    - growth_and_conversion
+    - positioning_and_copy
+    - innovation
+
+  capabilities:
+    - validate
+    - challenge_approaches
+    - teach_and_exemplify
+    - identify_required_repairs
+    - identify_improvements
+    - identify_missing_product_work
+    - propose_simplifications
+    - propose_bounded_experiments
+    - benchmark_transferable_principles
+    - create_detailed_issues
+    - update_issue_acceptance_criteria
+    - create_corrective_pull_requests
+    - improve_tests
+    - correct_documentation
+    - correct_source_traceability
+    - propose_architecture_changes
+    - propose_product_and_ux_changes
+    - propose_business_and_growth_changes
+    - update_agent_wave_state
+
+  mandatory_viewpoints:
+    - principal_engineer
+    - chief_architect
+    - chief_product_advisor
+    - ux_design_director
+    - regulatory_reviewer
+    - security_reviewer
+    - business_growth_strategist
+    - innovation_advisor
+    - customer_advocate
+
+  required_output:
+    path_pattern: supervisory-runs/YYYY-MM-DDTHHMMSSZ
+    files:
+      - summary.md
+      - findings.json
+      - actions.json
+      - source-validation.json
+      - code-review.json
+      - product-review.json
+      - ux-review.json
+      - business-review.json
+      - innovation-review.json
+      - orchestration-update.json
+      - scorecard.json
+
+  finding_classes:
+    - REQUIRED
+    - RECOMMENDED
+    - OPTIMIZATION
+    - EXPERIMENTAL
+
+  finding_solution_fields:
+    - concrete_problem
+    - evidence
+    - cause
+    - impact
+    - recommended_approach
+    - alternatives_considered
+    - concrete_example
+    - validation
+    - responsible_agent
+    - dependencies
+    - unblock_condition
+
+  result_states:
+    - ACCEPTED
+    - READY_TO_MERGE
+    - REPAIR_REQUIRED
+    - IMPROVEMENT_REQUIRED
+    - SOURCE_INVALID
+    - ARCHITECTURE_REVIEW_REQUIRED
+    - PRODUCT_REVIEW_REQUIRED
+    - UX_REVIEW_REQUIRED
+    - BUSINESS_REVIEW_REQUIRED
+    - SECURITY_FINDING
+    - DOCUMENTATION_INCOMPLETE
+    - BLOCKED
+    - DEFERRED
+
+  proactive_policy:
+    pull_request_required_to_review_product: false
+    proactive_assessment_required: true
+    maximum_new_proactive_issues_per_round: 3
+    duplicate_search_required: true
+    fixed_top_ten_lists_required: false
+    evidence_over_idea_volume: true
+
+  correction_policy:
+    direct_main_changes: forbidden
+    corrective_branch_prefix: chatgpt/
+    corrective_pull_request_required: true
+    silent_corrections: forbidden
+    tests_and_evidence_required: true
+    self_approval: forbidden
+
+  issue_quality:
+    required_fields:
+      - concrete_problem
+      - evidence_or_location
+      - impact
+      - required_change
+      - acceptance_criteria
+      - affected_components
+      - dependencies
+      - expected_evidence
+      - responsible_agent
+      - classification

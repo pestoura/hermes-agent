@@ -1,0 +1,1068 @@
+schema_version: '1.0'
+title: BlitzHub CRA Product Orchestrator State Machine
+description: 'Machine-readable specification of the state machine that controls how the CRA Product Orchestrator normalizes events from GitHub, the Hermes Kanban, agent runtime, and ChatGPT supervisory
+  runs into deterministic, auditable state transitions. The machine is evaluated by the executable test suite at tests/orchestrator_state_machine_test.py and consumes the canonical documents under .blitzhub/.
+
+  '
+documentation:
+- .blitzhub/orchestration.yaml
+- .blitzhub/kanban.yaml
+- .blitzhub/agent-waves.yaml
+- .blitzhub/definition-of-ready.yaml
+- .blitzhub/definition-of-done.yaml
+- .blitzhub/quality-gates.yaml
+- agents/provisioning.yaml
+- .blitzhub/policies/supervisory-policy.yaml
+state_machine:
+  initial_state: inbox
+  states:
+  - id: inbox
+    name: Inbox
+    kind: operational
+    kanban_column: Inbox
+    description: Raw events not yet normalized into an executable Issue.
+  - id: backlog
+    name: Backlog
+    kind: operational
+    kanban_column: Backlog
+    description: Issues that are valid but do not yet satisfy Definition of Ready.
+  - id: ready
+    name: Ready
+    kind: operational
+    kanban_column: Ready
+    description: Work that meets Definition of Ready and may be dispatched.
+  - id: in_progress
+    name: In Progress
+    kind: operational
+    kanban_column: In Progress
+    description: Work currently executed by an active Wave-1 agent.
+  - id: pull_request
+    name: Pull Request
+    kind: operational
+    kanban_column: Pull Request
+    description: Implementation submitted in a PR; checks in progress.
+  - id: supervisory_review
+    name: Supervisory Review
+    kind: operational
+    kanban_column: Supervisory Review
+    description: Delivery ready for independent ChatGPT review.
+  - id: rework
+    name: Rework
+    kind: operational
+    kanban_column: Rework
+    description: Mandatory changes identified by checks or supervision.
+  - id: ready_to_merge
+    name: Ready to Merge
+    kind: operational
+    kanban_column: Ready to Merge
+    description: All mandatory gates accepted; awaiting merge.
+  - id: done
+    name: Done
+    kind: terminal
+    kanban_column: Done
+    description: Result integrated or documented outcome proven.
+  - id: blocked
+    name: Blocked
+    kind: interruption
+    kanban_column: Blocked
+    description: Real external impediment with cause and recovery condition.
+  - id: deferred
+    name: Deferred
+    kind: interruption
+    kanban_column: Deferred
+    description: Explicitly and reversibly postponed work.
+  - id: external_review
+    name: External Review
+    kind: terminal_external
+    kanban_column: Supervisory Review
+    description: Work item handed off to the ChatGPT Supervisor for closure.
+  - id: retry_waiting
+    name: Retry Waiting
+    kind: operational
+    kanban_column: Todo
+    description: Logical state for execution failures waiting for retry cooldown or checkpoint resume.
+  - id: needs_attention
+    name: Needs Attention
+    kind: operational
+    kanban_column: Blocked
+    description: Logical state for operational attention required without external dependency.
+  - id: dead_letter
+    name: Dead Letter
+    kind: terminal
+    kanban_column: Blocked
+    description: Logical terminal state for exhausted retries; distinct from dependency blocked.
+  - id: containment_required
+    name: Containment Required
+    kind: interruption
+    kanban_column: Blocked
+    description: Auto-dispatch detected while a run or worker PID is still active; no new dispatch is allowed until containment completes. In Hermes v0.19 this may be mapped to physical Blocked as an operational
+      fallback only.
+  events:
+  - id: ev_issue_opened
+    name: issue_opened
+    source:
+      type: github
+    description: A GitHub issue is created.
+  - id: ev_issue_updated
+    name: issue_updated
+    source:
+      type: github
+    description: Title, body, labels, or milestone of a GitHub issue changes.
+  - id: ev_issue_closed
+    name: issue_closed
+    source:
+      type: github
+    description: A GitHub issue is closed.
+  - id: ev_issue_commented
+    name: issue_commented
+    source:
+      type: github
+    description: A new comment is posted on a GitHub issue.
+  - id: ev_pr_opened
+    name: pr_opened
+    source:
+      type: github
+    description: A pull request is opened from an action branch.
+  - id: ev_pr_updated
+    name: pr_updated
+    source:
+      type: github
+    description: PR head or body is updated.
+  - id: ev_pr_checks_completed
+    name: pr_checks_completed
+    source:
+      type: github
+    description: All required checks on a PR reach a terminal status.
+  - id: ev_pr_merged
+    name: pr_merged
+    source:
+      type: github
+    description: A pull request is merged into main.
+  - id: ev_pr_closed
+    name: pr_closed
+    source:
+      type: github
+    description: A pull request is closed without merge.
+  - id: ev_review_submitted
+    name: review_submitted
+    source:
+      type: github
+    description: A review (approve, comment, or request-changes) is submitted.
+  - id: ev_supervisory_round
+    name: supervisory_round_completed
+    source:
+      type: supervisory
+    description: ChatGPT Supervisor finishes a review round and publishes findings.
+  - id: ev_dependency_resolved
+    name: dependency_resolved
+    source:
+      type: internal
+    description: A blocking dependency Issue is closed and accepted.
+  - id: ev_agent_assigned
+    name: agent_assigned
+    source:
+      type: agent_runtime
+    description: A real agent is assigned and acknowledges execution.
+  - id: ev_reconciliation_started
+    name: reconciliation_cycle_started
+    source:
+      type: internal
+    description: The orchestrator begins a scheduled or manual reconciliation cycle.
+  - id: ev_external_impediment_detected
+    name: external_impediment_detected
+    source:
+      type: internal
+    description: A real external impediment was detected during reconciliation.
+  - id: ev_iteration_budget_exhausted
+    name: iteration_budget_exhausted
+    source:
+      type: agent_runtime
+    description: Worker iteration budget exhausted without completing the task.
+  - id: ev_worker_lost
+    name: worker_lost
+    source:
+      type: agent_runtime
+    description: Worker process lost or disconnected during execution.
+  - id: ev_run_timed_out
+    name: run_timed_out
+    source:
+      type: agent_runtime
+    description: Run exceeded the configured timeout.
+  - id: ev_checkpoint_available
+    name: checkpoint_available
+    source:
+      type: internal
+    description: A valid recovery checkpoint is available for the task.
+  - id: ev_dispatch_approved
+    name: dispatch_approved
+    source:
+      type: internal
+    description: An explicit pre-execution dispatch approval was recorded for the card.
+  - id: ev_recovery_scope_approved
+    name: recovery_scope_approved
+    source:
+      type: supervisory
+    description: Supervisor approved a reduced recovery scope for retry.
+  - id: ev_retry_cooldown_elapsed
+    name: retry_cooldown_elapsed
+    source:
+      type: internal
+    description: Retry backoff/cooldown period has elapsed.
+  - id: ev_run_cancelled
+    name: run_cancelled
+    source:
+      type: internal
+    description: Active run was cancelled by operational action.
+  - id: ev_auto_dispatch_detected
+    name: auto_dispatch_detected
+    source:
+      type: internal
+    description: System detected automatic dispatch without explicit authorization.
+  - id: ev_run_containment_completed
+    name: run_containment_completed
+    source:
+      type: internal
+    description: Active-run containment completed and no active run or live PID remains.
+  guards:
+  - id: g_no_generic_soul
+    description: Agent SOUL.md is not the generic Hermes signature.
+    evaluation: not generic_soul_signature_found(agent)
+  - id: g_is_internal_agent
+    description: The work owner is a Wave-1 internal agent.
+    evaluation: agent.wave in {wave-1} and agent.runtime_name is native
+  - id: g_is_external_role
+    description: The work owner is an external role (ChatGPT Supervisor).
+    evaluation: agent.wave == external
+  - id: g_is_explicitly_deferred
+    description: The Issue is explicitly marked as deferred in the manifest.
+    evaluation: issue.labels contains deferred
+  - id: g_dependencies_resolved
+    description: All Issues in the dependencies list are closed.
+    evaluation: all(d in closed_issues for d in card.dependencies)
+  - id: g_dependency_issue_3_satisfied
+    description: Issue
+    evaluation: issue(3).state == closed and source_catalog_accepted
+  - id: g_agent_active
+    description: The assigned agent belongs to an active wave.
+    evaluation: agent.wave.status == active
+  - id: g_agent_healthy
+    description: The agent passed all health checks.
+    evaluation: agent.health_status == healthy
+  - id: g_agent_assignable
+    description: The agent appears in the assignable-agent list.
+    evaluation: agent.runtime_id in assignable_agent_registry
+  - id: g_soul_hash_match
+    description: Role-specific SOUL hash matches the canonical file SHA-256.
+    evaluation: sha256(agent.soul_runtime) == sha256(soul_source_file)
+  - id: g_definition_of_ready_met
+    description: Issue satisfies Definition of Ready.
+    evaluation: all required fields present and acceptance_criteria defined
+  - id: g_definition_of_done_met
+    description: Issue satisfies Definition of Done.
+    evaluation: acceptance_criteria_satisfied and evidence_linked
+  - id: g_wip_in_progress_ok
+    description: WIP limits for in_progress are not exceeded.
+    evaluation: in_progress_count <= global_limit and per_agent_in_progress(agent) <= 1
+  - id: g_pull_request_open
+    description: A pull request exists for the work item.
+    evaluation: issue.pull_request is not null
+  - id: g_required_checks_complete
+    description: All mandatory CI checks pass on the PR.
+    evaluation: all required checks on PR head are green
+  - id: g_no_failed_mandatory_checks
+    description: No mandatory check has failed.
+    evaluation: no failed mandatory checks on PR
+  - id: g_no_required_findings
+    description: No REQUIRED findings remain open from supervisory review.
+    evaluation: no REQUIRED findings for this card
+  - id: g_has_required_findings
+    description: ChatGPT Supervisor returned at least one REQUIRED finding.
+    evaluation: any finding.class == REQUIRED for this card
+  - id: g_has_failed_checks
+    description: At least one required check failed on the PR.
+    evaluation: any failed required checks on PR
+  - id: g_exceeds_retry_threshold
+    description: The work item has exceeded the retry threshold.
+    evaluation: retry_count >= retry_policy.max_attempts
+  - id: g_agent_wave_inactive
+    description: The agent's wave is not active.
+    evaluation: agent.wave.status != active
+  - id: g_external_impediment_present
+    description: A real external impediment is present.
+    evaluation: external_impediment_recorded(card)
+  - id: g_block_reason_present
+    description: Block reason and recovery condition are documented.
+    evaluation: card.block_reason is not None and card.recovery_condition is not None
+  - id: g_unblock_condition_present
+    description: There is a concrete unblock condition.
+    evaluation: card.unblock_condition is not None
+  - id: g_not_execution_failure
+    description: The block is not caused by an execution failure.
+    evaluation: card.block_kind not in {iteration_budget_exhausted, timed_out, crashed, gave_up}
+  - id: g_recoverable_failure
+    description: Failure class supports recovery via checkpoint/retry.
+    evaluation: card.failure_class in {iteration_budget_exhausted, timed_out, worker_lost}
+  - id: g_checkpoint_valid
+    description: A valid recovery checkpoint exists.
+    evaluation: card.checkpoint_ref is not None and checkpoint_valid(card.checkpoint_ref)
+  - id: g_change_token_present
+    description: Recovery is gated by a verified change token.
+    evaluation: card.change_token is not None
+  - id: g_no_active_run
+    description: No active run exists for the task.
+    evaluation: not card.active_run
+  - id: g_no_live_worker_pid
+    description: No live worker PID is associated with the task.
+    evaluation: card.worker_pid is None or not process_exists(card.worker_pid)
+  - id: g_retry_budget_available
+    description: Retry budget remains available.
+    evaluation: card.retry_count < retry_policy.max_attempts
+  - id: g_recovery_scope_reduced
+    description: Recovery scope has been reduced and approved.
+    evaluation: card.recovery_scope == reduced and supervisor_approved(card)
+  - id: g_dispatch_explicitly_allowed
+    description: Dispatch is explicitly allowed after recovery containment.
+    evaluation: card.dispatch_approval is not None and card.dispatch_approval.approved_by is not None and card.dispatch_approval.approved_at_utc is not None and card.dispatch_approval.source is not None
+  - id: g_remediation_submitted
+    description: Remediation has been submitted for review.
+    evaluation: card.remediation_submitted is True
+  - id: g_findings_addressed_by_evidence
+    description: REQUIRED findings are addressed by evidence in the updated PR.
+    evaluation: all(f.status in {accepted, still_open} for f in card.supervisory_findings)
+  - id: g_pull_request_updated
+    description: The pull request head has been updated after rework.
+    evaluation: issue.pull_request.head_sha != card.rework_base_sha
+  - id: g_findings_in_revalidation_state
+    description: All REQUIRED findings are in remediation_submitted or pending_revalidation.
+    evaluation: all(f.status in {remediation_submitted, pending_revalidation} for f in issue.supervisory_findings if f.disposition == REQUIRED)
+  - id: g_auto_dispatch_scope_invalid
+    description: Auto-dispatch occurred without valid mission metadata, explicit allow-dispatch, or active-run containment.
+    evaluation: dispatch_event.recovery_scope_approved and dispatch_event.dispatch_explicitly_allowed and not dispatch_event.active_run_present
+  - id: g_auto_dispatch_unauthorized
+    description: Auto-dispatch occurred without explicit authorization.
+    evaluation: dispatch_event.recovery_scope_approved is False or dispatch_event.dispatch_explicitly_allowed is False
+  - id: g_auto_dispatch_confirmed_contained
+    description: Auto-dispatch evidence is present but requires containment due to active run or live PID.
+    evaluation: dispatch_event.active_run_present or dispatch_event.live_worker_pid_present
+  - id: g_usable_progress_present
+    description: 'Recovery has usable progress: valid checkpoint, change token, reusable progress, approved recovery scope, and no decomposition required.'
+    evaluation: card.checkpoint_ref is not None and checkpoint_valid(card.checkpoint_ref) and card.change_token is not None and recovery_progress_reusable(card) and supervisor_approved_recovery_scope(card) and not mission_requires_decomposition(card)
+  - id: g_no_decomposition_required
+    description: The current mission does not require decomposition before retry.
+    evaluation: not mission_requires_decomposition(card)
+  - id: g_no_usable_progress
+    description: 'No usable progress: checkpoint absent/invalid, or progress not reusable, or mission requires decomposition.'
+    evaluation: not g_usable_progress_present
+  - id: g_active_run_or_live_pid
+    description: Active run or live worker PID is present, indicating unauthorized auto-dispatch in progress.
+    evaluation: card.active_run is True or (card.worker_pid is not None and process_exists(card.worker_pid))
+  - id: g_dispatch_not_authorized
+    description: Dispatch is not explicitly authorized for the current recovery context.
+    evaluation: card.dispatch_approval is None or card.dispatch_approval.approved_by is None or card.dispatch_approval.approved_at_utc is None or card.dispatch_approval.source is None or not supervisor_approved_recovery_scope(card)
+  actions:
+  - id: act_create_card
+    description: Create or reconcile a Kanban card for an existing GitHub Issue.
+    idempotent_key: github:pestoura/blitzhub-cra-navigator:issue:{{issue.number}}
+    effects:
+    - kanban_card_created
+  - id: act_approve_dispatch
+    description: Record an explicit pre-execution dispatch approval for a card.
+    idempotent_key: card:{{card.id}}:approve_dispatch:{{dispatch_approval.approved_by}}:{{dispatch_approval.approved_at_utc}}
+    effects:
+      - dispatch_approved
+      - audit_recorded
+  - id: act_move_card
+    description: Move a Kanban card to the column matching the target state.
+    idempotent_key: card:{{card.id}}:column:{{state.kanban_column}}
+    effects:
+      - kanban_card_moved
+  - id: act_assign_agent
+    description: Assign a healthy Wave-1 agent and record the assignment.
+    idempotent_key: card:{{card.id}}:assign:{{agent.runtime_name}}
+    effects:
+    - agent_assigned
+    - issue_assigned
+  - id: act_close_issue
+    description: Close the linked GitHub Issue after merge.
+    idempotent_key: issue:{{issue.number}}:close
+    effects:
+    - issue_closed
+  - id: act_prioritise_required_findings
+    description: Elevate REQUIRED findings above new development.
+    idempotent_key: card:{{card.id}}:prioritise:required
+    effects:
+    - priority_raised
+  - id: act_block_item
+    description: Mark a work item as Blocked with cause and recovery condition.
+    idempotent_key: card:{{card.id}}:block:{{cause}}
+    effects:
+    - card_blocked
+  - id: act_defer_item
+    description: Explicitly defer a work item with reversible intent.
+    idempotent_key: card:{{card.id}}:defer
+    effects:
+    - card_deferred
+  - id: act_dead_letter
+    description: Route a work item to dead-letter after retry exhaustion.
+    idempotent_key: card:{{card.id}}:dead_letter
+    effects:
+    - card_blocked
+    - notification_sent
+  - id: act_capture_checkpoint
+    description: Capture a recovery checkpoint before retry.
+    idempotent_key: card:{{card.id}}:checkpoint:{{card.change_token}}
+    effects:
+    - checkpoint_captured
+  - id: act_schedule_retry
+    description: Schedule a retry with backoff.
+    idempotent_key: card:{{card.id}}:retry:{{card.retry_count}}
+    effects:
+    - retry_scheduled
+  - id: act_resume_from_checkpoint
+    description: Resume execution from the captured checkpoint.
+    idempotent_key: card:{{card.id}}:resume:{{card.checkpoint_ref}}
+    effects:
+    - run_started
+  - id: act_mark_needs_attention
+    description: Mark the card as needing operational attention.
+    idempotent_key: card:{{card.id}}:needs_attention
+    effects:
+    - card_updated
+  - id: act_cancel_active_run
+    description: Cancel the active run for the task.
+    idempotent_key: card:{{card.id}}:cancel_run:{{card.run_id}}
+    effects:
+    - run_cancelled
+  - id: act_prevent_auto_dispatch
+    description: Prevent automatic dispatch until explicit allowance.
+    idempotent_key: card:{{card.id}}:prevent_auto_dispatch
+    effects:
+    - dispatch_prevented
+  - id: act_record_recovery_event
+    description: Record a recovery lifecycle event.
+    idempotent_key: card:{{card.id}}:recovery_event:{{event.id}}
+    effects:
+    - event_recorded
+  transitions:
+  - id: t01
+    from: inbox
+    to: backlog
+    guard:
+    - g_no_generic_soul
+    - g_is_internal_agent
+    action:
+    - act_create_card
+    description: Normalize a new Issue into a tracked Backlog card.
+    'on': ev_issue_opened
+  - id: t02
+    from: backlog
+    to: ready
+    guard:
+    - g_definition_of_ready_met
+    - g_agent_active
+    - g_agent_healthy
+    - g_agent_assignable
+    - g_soul_hash_match
+    - g_no_generic_soul
+    - g_dependencies_resolved
+    - g_wip_in_progress_ok
+    action:
+    - act_move_card
+    description: Promote a backlog item to Ready when all preconditions hold.
+    'on': ev_reconciliation_started
+  - id: t03
+    from: ready
+    to: in_progress
+    guard:
+    - g_agent_active
+    - g_agent_healthy
+    - g_agent_assignable
+    - g_soul_hash_match
+    - g_no_generic_soul
+    - g_dependencies_resolved
+    - g_wip_in_progress_ok
+    action:
+    - act_assign_agent
+    - act_move_card
+    description: Agent accepts a Ready task and execution begins.
+    'on': ev_agent_assigned
+  - id: t04
+    from: in_progress
+    to: pull_request
+    guard:
+    - g_pull_request_open
+    action:
+    - act_move_card
+    description: Implementation is submitted as a pull request.
+    'on': ev_pr_opened
+  - id: t05
+    from: pull_request
+    to: supervisory_review
+    guard:
+    - g_required_checks_complete
+    - g_no_failed_mandatory_checks
+    action:
+    - act_move_card
+    description: All required checks pass; ready for ChatGPT supervision.
+    'on': ev_pr_checks_completed
+  - id: t06
+    from: supervisory_review
+    to: ready_to_merge
+    guard:
+    - g_no_required_findings
+    - g_definition_of_done_met
+    - g_no_failed_mandatory_checks
+    action:
+    - act_move_card
+    description: Supervision passes; all gates satisfied for merge.
+    'on': ev_supervisory_round
+  - id: t07
+    from: ready_to_merge
+    to: done
+    guard:
+    - g_definition_of_done_met
+    action:
+    - act_move_card
+    - act_close_issue
+    description: PR merged and Issue closed; work is Done.
+    'on': ev_pr_merged
+  - id: t08
+    from: supervisory_review
+    to: rework
+    guard:
+    - g_has_required_findings
+    action:
+    - act_prioritise_required_findings
+    - act_move_card
+    priority: high
+    description: REQUIRED finding routes the item to Rework for mandatory fix.
+    'on': ev_supervisory_round
+  - id: t09
+    from: pull_request
+    to: rework
+    guard:
+    - g_has_failed_checks
+    action:
+    - act_move_card
+    priority: high
+    description: Failed mandatory checks send the item to Rework.
+    'on': ev_pr_checks_completed
+  - id: t10
+    from: rework
+    to: supervisory_review
+    guard:
+    - g_remediation_submitted
+    - g_required_checks_complete
+    - g_findings_in_revalidation_state
+    - g_pull_request_updated
+    action:
+    - act_move_card
+    description: Reworked PR with remediation submitted and checks passing returns to Supervisory Review for pending revalidation.
+    'on': ev_pr_updated
+  - id: t11
+    from: backlog
+    to: blocked
+    guard:
+    - g_external_impediment_present
+    - g_block_reason_present
+    - g_unblock_condition_present
+    - g_not_execution_failure
+    action:
+    - act_block_item
+    priority: normal
+    description: Block a backlog item only on a documented real external impediment.
+    'on': ev_external_impediment_detected
+  - id: t12
+    from: ready
+    to: blocked
+    guard:
+    - g_external_impediment_present
+    - g_block_reason_present
+    - g_unblock_condition_present
+    - g_not_execution_failure
+    action:
+    - act_block_item
+    priority: normal
+    description: Block a ready item only on a documented real external impediment.
+    'on': ev_external_impediment_detected
+  - id: t13
+    from: in_progress
+    to: blocked
+    guard:
+    - g_external_impediment_present
+    - g_block_reason_present
+    - g_unblock_condition_present
+    - g_not_execution_failure
+    action:
+    - act_block_item
+    priority: normal
+    description: Block an in-progress item only on a documented real external impediment.
+    'on': ev_external_impediment_detected
+  - id: t14
+    from: blocked
+    to: backlog
+    guard:
+    - g_dependencies_resolved
+    - g_definition_of_ready_met
+    action:
+    - act_move_card
+    description: Blocked item returns to Backlog when unblocked.
+    'on': ev_dependency_resolved
+  - id: t15
+    from: any
+    to: deferred
+    guard:
+    - g_is_explicitly_deferred
+    action:
+    - act_defer_item
+    description: Explicitly and reversibly defer a work item.
+    'on': ev_reconciliation_started
+  - id: t16
+    from: deferred
+    to: backlog
+    guard:
+    - g_definition_of_ready_met
+    - g_dependencies_resolved
+    action:
+    - act_move_card
+    description: Reactivate a deferred item back to Backlog.
+    'on': ev_reconciliation_started
+  - id: t17
+    from: inbox
+    to: external_review
+    guard:
+    - g_no_generic_soul
+    - g_is_external_role
+    action:
+    - act_create_card
+    description: External-role work items go directly to External Review.
+    'on': ev_issue_opened
+  - id: t18
+    from: any
+    to: dead_letter
+    guard:
+    - g_exceeds_retry_threshold
+    action:
+    - act_dead_letter
+    description: Exhausted retries route the item to logical dead_letter; v0.19 may map this to physical Blocked with distinct logical_state.
+    'on': ev_reconciliation_started
+  - id: t19
+    from: backlog
+    to: ready
+    guard:
+    - g_definition_of_ready_met
+    - g_dependencies_resolved
+    - g_agent_active
+    - g_agent_healthy
+    - g_agent_assignable
+    action:
+    - act_move_card
+    description: Dependency-gated promotion from Backlog to Ready.
+    'on': ev_dependency_resolved
+  - id: t20
+    from: ready
+    to: blocked
+    guard:
+    - g_agent_wave_inactive
+    action:
+    - act_block_item
+    description: An item whose owner agent's wave is inactive is blocked.
+    'on': ev_reconciliation_started
+  - id: t21
+    from: in_progress
+    to: retry_waiting
+    'on': ev_iteration_budget_exhausted
+    guard:
+    - g_recoverable_failure
+    - g_checkpoint_valid
+    - g_change_token_present
+    - g_no_active_run
+    - g_no_live_worker_pid
+    - g_retry_budget_available
+    - g_recovery_scope_reduced
+    - g_dispatch_explicitly_allowed
+    - g_usable_progress_present
+    - g_no_decomposition_required
+    action:
+    - act_capture_checkpoint
+    - act_schedule_retry
+    - act_record_recovery_event
+    priority: high
+    description: Budget exhausted with usable progress, approved scope, and no decomposition required -> retry_waiting for controlled resume.
+  - id: t22
+    from: in_progress
+    to: backlog
+    'on': ev_iteration_budget_exhausted
+    guard:
+    - g_recoverable_failure
+    - g_no_active_run
+    - g_no_live_worker_pid
+    - g_no_usable_progress
+    action:
+    - act_record_recovery_event
+    priority: high
+    description: Budget exhausted without usable progress -> backlog for decomposition/replan.
+  - id: t23
+    from: any
+    to: needs_attention
+    guard:
+    - g_recoverable_failure
+    - g_no_active_run
+    - g_no_live_worker_pid
+    action:
+    - act_mark_needs_attention
+    - act_record_recovery_event
+    priority: high
+    description: Worker lost with no active run or live PID -> needs attention.
+    'on': ev_worker_lost
+  - id: t24
+    from: any
+    to: retry_waiting
+    guard:
+    - g_recoverable_failure
+    - g_checkpoint_valid
+    - g_change_token_present
+    - g_no_active_run
+    - g_no_live_worker_pid
+    - g_retry_budget_available
+    action:
+    - act_capture_checkpoint
+    - act_schedule_retry
+    - act_record_recovery_event
+    priority: high
+    description: Run timed out with valid checkpoint -> retry_waiting.
+    'on': ev_run_timed_out
+  - id: t25
+    from: retry_waiting
+    to: dead_letter
+    guard:
+    - g_exceeds_retry_threshold
+    action:
+    - act_dead_letter
+    - act_record_recovery_event
+    priority: high
+    description: Retry cooldown elapsed and retry threshold exceeded -> dead_letter terminal state.
+    'on': ev_retry_cooldown_elapsed
+  - id: t26
+    from: retry_waiting
+    to: in_progress
+    guard:
+    - g_no_active_run
+    - g_no_live_worker_pid
+    - g_retry_budget_available
+    - g_checkpoint_valid
+    - g_dispatch_explicitly_allowed
+    action:
+    - act_resume_from_checkpoint
+    - act_record_recovery_event
+    priority: high
+    description: Retry cooldown elapsed with valid checkpoint and explicit dispatch allowance -> resume into in_progress.
+    'on': ev_retry_cooldown_elapsed
+  - id: t27
+    from: any
+    to: ready
+    guard:
+    - g_no_active_run
+    - g_no_live_worker_pid
+    - g_change_token_present
+    - g_dispatch_explicitly_allowed
+    action:
+    - act_record_recovery_event
+    priority: high
+    description: Active run cancelled cleanly -> ready with preserved evidence.
+    'on': ev_run_cancelled
+  - id: t28a
+    from: ready
+    to: containment_required
+    guard:
+    - g_active_run_or_live_pid
+    - g_dispatch_not_authorized
+    action:
+    - act_prevent_auto_dispatch
+    - act_record_recovery_event
+    priority: high
+    description: Unauthorized auto-dispatch with active run or live PID in ready -> containment_required active containment.
+    'on': ev_auto_dispatch_detected
+  - id: t28c
+    from: in_progress
+    to: containment_required
+    guard:
+    - g_active_run_or_live_pid
+    - g_dispatch_not_authorized
+    action:
+    - act_prevent_auto_dispatch
+    - act_record_recovery_event
+    priority: high
+    description: Unauthorized auto-dispatch with active run or live PID in in_progress -> containment_required active containment.
+    'on': ev_auto_dispatch_detected
+  - id: t28d
+    from: retry_waiting
+    to: containment_required
+    guard:
+    - g_active_run_or_live_pid
+    - g_dispatch_not_authorized
+    action:
+    - act_prevent_auto_dispatch
+    - act_record_recovery_event
+    priority: high
+    description: Unauthorized auto-dispatch with active run or live PID in retry_waiting -> containment_required active containment.
+    'on': ev_auto_dispatch_detected
+  - id: t29
+    from: containment_required
+    to: needs_attention
+    guard:
+    - g_no_active_run
+    - g_no_live_worker_pid
+    action:
+    - act_mark_needs_attention
+    - act_record_recovery_event
+    priority: high
+    description: Active-run containment completed with no active run or live PID -> needs_attention for operator review.
+    'on': ev_run_containment_completed
+  work_item_flow:
+  - inbox
+  - backlog
+  - ready
+  - in_progress
+  - pull_request
+  - supervisory_review
+  - rework
+  - ready_to_merge
+  - done
+  - blocked
+  - deferred
+  - external_review
+  - retry_waiting
+  - needs_attention
+  - dead_letter
+  - containment_required
+  kanban_mapping:
+    column_correspondence:
+    - state: inbox
+      column: Inbox
+    - state: backlog
+      column: Backlog
+    - state: ready
+      column: Ready
+    - state: in_progress
+      column: In Progress
+    - state: pull_request
+      column: Pull Request
+    - state: supervisory_review
+      column: Supervisory Review
+    - state: rework
+      column: Rework
+    - state: ready_to_merge
+      column: Ready to Merge
+    - state: done
+      column: Done
+    - state: blocked
+      column: Blocked
+    - state: deferred
+      column: Deferred
+    - state: external_review
+      column: Supervisory Review
+    - state: retry_waiting
+      column: Todo
+    - state: needs_attention
+      column: Blocked
+    - state: dead_letter
+      column: Blocked
+    - state: containment_required
+      column: Blocked
+    idempotency_key_template: github:pestoura/blitzhub-cra-navigator:issue:{{issue.number}}
+    one_card_per_issue: true
+    dispatch_approval:
+      type: object
+      description: Pre-execution dispatch approval metadata required before a Ready item can be assigned.
+      required:
+        - approved_by
+        - approved_at_utc
+        - source
+      additionalProperties: false
+      properties:
+        approved_by:
+          type: string
+          description: Entity that authorized dispatch.
+        approved_at_utc:
+          type: string
+          format: date-time
+          description: ISO-8601 timestamp when dispatch was approved.
+        source:
+          type: string
+          description: Origin of the approval, e.g. supervisory_run, reconciliation_cycle, manual_operator.
+        supervisory_run_id:
+          type: string
+          description: Optional supervisory run identifier.
+        note:
+          type: string
+          description: Optional rationale or scope note.
+  dispatch_policy:
+    wave_activation_source: chatgpt_supervisor
+    assignable_agent_criteria:
+    - Agent must belong to an active wave
+    - Agent must exist in the runtime registry
+    - Agent must appear in the assignable-agent list
+    - Agent must have passed assign/readback health checks
+    - Agent must have a role-specific SOUL whose SOUL hash matches the canonical repository file
+    - Agent must not carry the generic SOUL signature
+    - Agent must have capacity under the WIP limits
+    dependency_resolution: 'Dependencies are resolved when every Issue in the work item''s dependencies list is closed and accepted, and each requirement derived from those Issues is satisfied. Issue #4
+      additionally requires the source catalog from Issue #3.'
+    dispatch_only_to_active_waves: true
+    wip_limits:
+      in_progress_global: 5
+      in_progress_per_agent: 1
+  supervisory_integration:
+    disposition_mapping:
+      ACCEPTED: ready_to_merge
+      READY_TO_MERGE: ready_to_merge
+      REPAIR_REQUIRED: rework
+      IMPROVEMENT_REQUIRED: backlog
+      SOURCE_INVALID: rework
+      ARCHITECTURE_REVIEW_REQUIRED: rework
+      SECURITY_FINDING: rework
+      DOCUMENTATION_INCOMPLETE: rework
+      BLOCKED: blocked
+      DEFERRED: deferred
+    required_finding_effects:
+    - REQUIRED findings interrupt the normal flow and route the card to Rework
+    - REQUIRED findings are prioritised above new development
+  conflict_resolution:
+    branch_prefixes:
+      hermes: hermes/
+      chatgpt: chatgpt/
+      orchestrator: orchestrator/
+    merge_policy:
+    - 'force_push: forbidden — no force pushes to any branch'
+    - Direct writes to main are forbidden
+    - ChatGPT corrective branches must open a PR
+    - Orchestrator never modifies active chatgpt/* branches
+  retry_policy:
+    max_attempts: 3
+    backoff_strategy: exponential
+    base_delay_seconds: 10
+    max_delay_seconds: 600
+    timeout_seconds: 3600
+  dead_letter:
+    condition: retry_count >= retry_policy.max_attempts and last_run outcome in {timed_out, iteration_budget_exhausted, worker_lost}
+    action: act_dead_letter — route card to logical dead_letter; v0.19 adapter maps to physical Blocked with distinct logical_state
+    notification_target: board_owner and chatgpt_supervisor
+    description: Logical terminal state for exhausted retries. Blocked remains reserved for external impediments. v0.19 maps dead_letter to Blocked only as a physical fallback.
+  scenarios:
+  - id: normal
+    name: Normal flow
+    transitions:
+    - t01
+    - t02
+    - t03
+    - t04
+    - t05
+    - t06
+    - t07
+    description: inbox -> backlog -> ready -> in_progress -> pull_request -> supervisory_review -> ready_to_merge -> done
+  - id: rework
+    name: Rework
+    transitions:
+    - t08
+    - t09
+    - t10
+    description: Required finding or failed check sends work to Rework; update returns to Supervisory Review.
+  - id: block
+    name: Block
+    transitions:
+    - t11
+    - t12
+    - t13
+    description: Any state can be blocked by a real external impediment via reconciliation.
+  - id: defer
+    name: Defer
+    transitions:
+    - t15
+    - t16
+    description: Explicitly deferred items return to Backlog when ready again.
+  - id: external_review
+    name: External review
+    transitions:
+    - t17
+    description: External-role items go directly to External Review (terminal_external).
+  - id: dead_letter
+    name: Dead-letter
+    transitions:
+    - t18
+    description: Retry exhaustion routes the card to Blocked with a dead-letter notification.
+  - id: dependency_gate
+    name: Dependency gate
+    transitions:
+    - t19
+    description: 'Issue #4-style: backlog -> ready when dependency resolved.'
+  - id: wave_gate
+    name: Wave gate
+    transitions:
+    - t20
+    description: An item whose owner agent's wave is inactive is blocked.
+  - id: retry_waiting
+    name: Retry Waiting
+    transitions:
+    - t21
+    - t22
+    - t23
+    - t24
+    - t25
+    - t26
+    - t27
+    - t28a
+    - t28b
+    description: Execution-failure recovery paths with checkpoint, cooldown, cancellation, containment, and auto-dispatch containment.
+  - id: containment
+    name: Containment
+    transitions:
+    - t28a
+    - t29
+    description: Active auto-dispatch with active run or live PID routes to containment_required; completed containment proceeds to needs_attention.
+  runtime_compatibility:
+    hermes_v0_19:
+      rich_transition_cli: false
+      active_run_cancel_cli: false
+      ready_auto_dispatches: true
+      logical_dispatch_guard_enforced: false
+      unblock_no_dispatch_supported: false
+      physical_to_logical_mapping:
+        retry_waiting: Todo
+        rework: Ready or Rework when supported
+        needs_attention: Blocked only with block_kind=operational_attention
+        dead_letter: Blocked only as fallback v0.19, with distinct logical_state
+        containment_required: Blocked only as operational fallback in v0.19, with distinct logical_state
+      workarounds:
+      - Do not execute unblock until the full reduced mission is installed and readback-verified.
+      - Treat Ready as an executable queue in v0.19; unblock may trigger auto-dispatch.
+      - Logical dispatch_allowed is not an executable runtime guard in v0.19.
+      - Any unblock requires final mission, owner, branch, tests and explicit allow-dispatch metadata.
+      - Observe at least 90 seconds after unblock; validate run, PID, profile, task and mission immediately after any auto-dispatch.
+      - If mission is wrong, block again to prevent respawn; do not restart the gateway.
+      - There is no official cancellation API for an active worker in v0.19.
+      - Do not model comments as executable guards; treat them as evidence only.
+      - Recovery without safe cancellation capacity must remain in containment.
+      prohibitions:
+      - Do not recommend unblock -> ready/todo without pre-validated mission metadata.
+      - Do not conflate dead-letter with dependency blocked.
+      - Do not treat Ready as implying run_started; run_started is modelled only after in_progress.
+      - Do not block execution-failure incidents using the dependency blocked path.
+      - Do not kill, pkill, killall or SIGKILL workers as standard recovery.
+      - Do not use unblock as a generic recovery mechanism when official active-run cancellation is unavailable.
+  findings_states:
+  - id: open
+    name: Open
+    description: Required finding is open and unresolved.
+  - id: remediation_submitted
+    name: Remediation Submitted
+    description: Remediation evidence has been submitted for review.
+  - id: pending_revalidation
+    name: Pending Revalidation
+    description: Remediation is awaiting independent revalidation.
+  - id: accepted
+    name: Accepted
+    description: Required finding has been accepted after revalidation.
+  - id: still_open_after_revalidation
+    name: Still Open After Revalidation
+    description: Finding remains open after revalidation; escalation required.

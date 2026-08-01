@@ -1,0 +1,82 @@
+{
+  "tasks": [
+    {
+      "issue": "#3",
+      "task_id": "t_005a528d",
+      "assignee": "blitzhub-cra-regulatory-research",
+      "kanban_state": "running",
+      "dispatcher_state": "running",
+      "runtime_state": "RUNNING_CONFIRMED",
+      "previous_run_id": 6,
+      "current_run_id": 6,
+      "recovery_action": "preserve",
+      "duplicate_check": "none",
+      "final_status": "running"
+    },
+    {
+      "issue": "#5",
+      "task_id": "t_905d1aff",
+      "assignee": "blitzhub-cra-solution-architect",
+      "kanban_state": "running",
+      "dispatcher_state": "running",
+      "runtime_state": "RUNNING_CONFIRMED",
+      "previous_run_id": 7,
+      "current_run_id": 7,
+      "recovery_action": "preserve",
+      "duplicate_check": "none",
+      "final_status": "running"
+    },
+    {
+      "issue": "#6",
+      "task_id": "t_8a87aa2d",
+      "assignee": "blitzhub-cra-devops-repository",
+      "kanban_state": "running",
+      "dispatcher_state": "running",
+      "runtime_state": "RUNNING_CONFIRMED",
+      "previous_run_id": 8,
+      "current_run_id": 8,
+      "recovery_action": "preserve",
+      "duplicate_check": "none",
+      "final_status": "running"
+    },
+    {
+      "issue": "#7",
+      "task_id": "t_63a53028",
+      "assignee": "blitzhub-cra-product-orchestrator",
+      "kanban_state": "running",
+      "dispatcher_state": "running",
+      "runtime_state": "RUNNING_CONFIRMED",
+      "previous_run_id": 9,
+      "current_run_id": 9,
+      "recovery_action": "preserve",
+      "duplicate_check": "none",
+      "final_status": "running"
+    },
+    {
+      "issue": "#4",
+      "task_id": "t_d267e3ae",
+      "assignee": "blitzhub-cra-requirements-traceability",
+      "kanban_state": "todo",
+      "dispatcher_state": "ready_for_dispatch_when_unblocked",
+      "runtime_state": "BLOCKED_BY_ISSUE_3",
+      "previous_run_id": null,
+      "current_run_id": null,
+      "recovery_action": "wait_for_issue_3",
+      "duplicate_check": "none",
+      "final_status": "todo"
+    },
+    {
+      "issue": "#8",
+      "task_id": "t_80c46680",
+      "assignee": null,
+      "kanban_state": "review",
+      "dispatcher_state": "skipped_unassigned",
+      "runtime_state": "EXTERNAL_SUPERVISION",
+      "previous_run_id": null,
+      "current_run_id": null,
+      "recovery_action": "none",
+      "duplicate_check": "none",
+      "final_status": "review"
+    }
+  ]
+}

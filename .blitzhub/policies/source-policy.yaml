@@ -1,0 +1,39 @@
+schema_version: "1.0"
+source_policy:
+  primary_required_for_product_rules: true
+  preferred_authorities:
+    - EUR-Lex
+    - European Commission
+    - ENISA
+    - national_competent_authorities
+
+  secondary_sources:
+    allowed_for_context: true
+    allowed_as_sole_rule_basis: false
+
+  required_metadata:
+    - authority
+    - title
+    - document_identifier
+    - article_or_section
+    - source_url
+    - publication_or_version_date
+    - retrieved_at
+    - source_type
+    - validation_status
+
+  required_separation:
+    - fact
+    - interpretation
+    - inference
+    - recommendation
+    - open_question
+
+  prohibited_repository_content:
+    - purchased_standards_without_redistribution_rights
+    - copyrighted_commercial_reports
+    - unverifiable_source_extracts
+
+  stale_source_handling:
+    mark_as_stale: true
+    prevent_new_rule_release_until_reviewed: true

@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0",
+  "origin": "chatgpt-supervisor",
+  "consulted_at": "2026-07-31T17:12:00Z",
+  "sources": [
+    {"authority":"EUR-Lex","document":"Regulation (EU) 2024/2847","identifier":"32024R2847","status":"validated","finding":"Article 16 is the single reporting platform; Article 71 applies Article 14 from 2026-09-11 and Chapter IV from 2026-06-11."},
+    {"authority":"EUR-Lex","document":"Directive (EU) 2022/2555","identifier":"32022L2555","status":"validated","finding":"PR #16 incorrectly uses 32022R2555 and a non-official title."},
+    {"authority":"EUR-Lex","document":"Commission Implementing Regulation (EU) 2025/2392","identifier":"32025R2392","status":"validated","finding":"Official Journal publication date is 2025-12-01; PR #16 records 2025-11-29."},
+    {"authority":"EUR-Lex","document":"Commission Delegated Regulation (EU) 2025/1535","identifier":"32025R1535","status":"validated","finding":"Act exists; remaining metadata must be checked against the published OJ record before merge."}
+  ]
+}

@@ -1,0 +1,146 @@
+schema_version: "1.1"
+entrypoint:
+  runtime_agent: default
+  role: transient_bootstrapper
+  persistent_product_agent: false
+  start_issue: 2
+  directive: BOOTSTRAP_DIRECTIVE.md
+  canonical_repository: pestoura/blitzhub-cra-navigator
+
+mission:
+  create_runtime_board: true
+  create_runtime_agents: true
+  install_role_specific_souls: true
+  activate_wave_1: true
+  materialize_github_work: true
+  dispatch_initial_work: true
+  handoff_to: cra-product-orchestrator
+
+mandatory_runtime_discovery:
+  - discover_native_agent_or_profile_management_tools
+  - discover_native_kanban_tools
+  - discover_runtime_soul_loading_behavior
+  - discover_github_access
+  - record_selected_runtime_adapters
+
+prohibitions:
+  - do_not_simulate_runtime_resources_only_as_repository_files
+  - do_not_continue_as_product_orchestrator_after_handoff
+  - do_not_activate_wave_2_or_wave_3
+  - do_not_create_unnamed_or_uncontracted_agents
+  - do_not_use_generic_soul_for_project_agents
+  - do_not_dispatch_work_before_agent_health_checks
+  - do_not_dispatch_when_soul_hash_mismatches
+  - do_not_dispatch_when_profile_not_assignable
+  - do_not_finish_with_zero_tasks_executing
+
+execution_phases:
+  - id: validate
+    actions:
+      - validate_repository_and_manifests
+      - validate_issue_2_is_open
+      - validate_github_access
+      - discover_runtime_capabilities
+      - verify_five_canonical_soul_files_exist
+    exit_gate:
+      - all_required_manifests_valid
+      - five_canonical_soul_files_valid
+      - runtime_agent_management_available
+      - runtime_kanban_management_available
+
+  - id: provision_board
+    manifest: .blitzhub/board-provisioning.yaml
+    actions:
+      - create_or_reconcile_runtime_board
+      - create_columns_and_fields
+      - create_initial_cards
+      - read_back_and_compare
+    exit_gate:
+      - board_acceptance_criteria_met
+
+  - id: provision_agents
+    manifest: agents/provisioning.yaml
+    actions:
+      - create_or_reconcile_wave_1_agents
+      - install_prompts_and_contracts
+      - install_or_reconcile_role_specific_souls
+      - reject_generic_soul_signature
+      - verify_soul_sha256_by_runtime_readback
+      - dispatcher_registry_lookup
+      - kanban_assign_round_trip
+      - apply_repository_and_board_context
+      - perform_agent_health_checks
+    exit_gate:
+      - all_wave_1_agents_registered
+      - all_wave_1_agents_assignable
+      - all_wave_1_souls_specific
+      - all_wave_1_soul_hashes_match
+      - all_wave_1_agents_healthy
+      - all_wave_1_agents_bound_to_board_and_repository
+
+  - id: start_orchestrator
+    actions:
+      - activate_cra_product_orchestrator
+      - verify_orchestrator_soul_readback
+      - provide_board_and_repository_state
+      - request_reconciliation_cycle
+    exit_gate:
+      - orchestrator_reconciliation_succeeds
+
+  - id: dispatch
+    actions:
+      - dispatch_issue_3_to_regulatory_research_engineer
+      - dispatch_issue_5_to_solution_architect
+      - dispatch_issue_6_to_devops_repository_engineer
+      - dispatch_issue_7_to_cra_product_orchestrator
+      - keep_issue_4_blocked_until_issue_3_dependency_is_satisfied
+    exit_gate:
+      - at_least_three_non_bootstrap_tasks_in_progress
+      - no_task_assigned_to_inactive_agent
+      - no_task_assigned_to_generic_soul_agent
+      - no_task_assigned_to_unassignable_profile
+      - issue_4_dependency_preserved
+
+  - id: attest_and_handoff
+    actions:
+      - write_bootstrap_summary
+      - write_machine_readable_result
+      - comment_issue_2
+      - handoff_operational_control_to_cra_product_orchestrator
+    exit_gate:
+      - report_committed_via_pull_request
+      - issue_2_contains_runtime_resource_inventory
+      - issue_2_contains_soul_hash_inventory
+      - orchestrator_acknowledges_control
+
+success_definition:
+  board:
+    exists: true
+    verified: true
+  wave_1_agents:
+    registered: 5
+    assignable: 5
+    materialised: 5
+    specific_souls_installed: 5
+    soul_hashes_matching: 5
+    generic_souls_detected: 0
+    healthy: 5
+    active: 5
+  work:
+    initial_cards_materialized: true
+    minimum_tasks_executing: 3
+  handoff:
+    acknowledged_by: cra-product-orchestrator
+  evidence:
+    summary_path: supervisory-runs/bootstrap/summary.md
+    result_path: supervisory-runs/bootstrap/result.json
+
+failure_policy:
+  schema_or_permission_error: stop_and_report
+  generic_or_missing_soul: stop_dispatch_and_report_blocked
+  soul_hash_mismatch: stop_dispatch_and_report_blocked
+  profile_not_assignable: stop_dispatch_and_report_blocked
+  individual_agent_creation_failure: retry_then_report_blocked
+  board_creation_failure: stop_and_report
+  dispatch_failure: keep_bootstrap_open_and_report
+  partial_success_must_not_be_reported_as_complete: true

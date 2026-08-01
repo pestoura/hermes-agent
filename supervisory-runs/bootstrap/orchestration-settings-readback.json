@@ -1,0 +1,12 @@
+{
+  "board": "blitzhub-cra-navigator",
+  "orchestrator_profile_configured": "blitzhub-cra-product-orchestrator",
+  "orchestrator_profile_resolved": "blitzhub-cra-product-orchestrator",
+  "default_assignee_configured": "blitzhub-cra-product-orchestrator",
+  "default_assignee_resolved": "blitzhub-cra-product-orchestrator",
+  "orchestration_mode": "manual",
+  "auto_decompose": false,
+  "generic_orchestrator_present": false,
+  "default_profile_controls_board": false,
+  "verified_at": "2026-07-31T17:25:00+01:00"
+}

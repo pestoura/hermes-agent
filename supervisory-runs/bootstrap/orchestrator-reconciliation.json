@@ -1,0 +1,60 @@
+{
+  "reconciliation_completed": true,
+  "control_accepted": true,
+  "control_accepted_statement": "ORCHESTRATOR_CONTROL_ACCEPTED",
+  "accepted_at": "2026-07-31T17:25:00+01:00",
+  "accepted_by": "blitzhub-cra-product-orchestrator",
+  "active_wave": "wave-1",
+  "external_supervision": {
+    "github_issue": 8,
+    "executor": "chatgpt-supervisor",
+    "runtime": "chatgpt-web",
+    "cadence_hours": 3,
+    "direct_hermes_integration": false,
+    "handoff_channel": "github",
+    "hermes_dispatch_allowed": false,
+    "kanban_task_id": "t_80c46680",
+    "kanban_state": "review"
+  },
+  "running_tasks": [
+    {
+      "issue": "#3",
+      "task": "t_005a528d",
+      "assignee": "blitzhub-cra-regulatory-research",
+      "status": "running"
+    },
+    {
+      "issue": "#5",
+      "task": "t_905d1aff",
+      "assignee": "blitzhub-cra-solution-architect",
+      "status": "running"
+    },
+    {
+      "issue": "#6",
+      "task": "t_8a87aa2d",
+      "assignee": "blitzhub-cra-devops-repository",
+      "status": "running"
+    },
+    {
+      "issue": "#7",
+      "task": "t_63a53028",
+      "assignee": "blitzhub-cra-product-orchestrator",
+      "status": "running"
+    }
+  ],
+  "blocked_tasks": [
+    {
+      "issue": "#4",
+      "task": "t_d267e3ae",
+      "assignee": "blitzhub-cra-requirements-traceability",
+      "status": "todo",
+      "blocked_by": "#3"
+    }
+  ],
+  "remaining_required_findings": [
+    "#10",
+    "#12",
+    "#14",
+    "#15"
+  ]
+}

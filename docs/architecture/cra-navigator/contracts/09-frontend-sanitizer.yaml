@@ -1,0 +1,47 @@
+schema_version: "1.0"
+contract_id: blitzhub-cra-frontend-sanitizer
+namespace: com.blitzhub.cra.sanitizer
+stability: stable
+owner: frontend-engineer
+
+description: >
+  Interface do frontend-sanitizer (Zona C). Primeira linha de defesa contra input
+  malicioso do utilizador ou da IA.
+
+interface:
+  FrontendSanitizer:
+    sanitizeText:
+      input:
+        text: "string"
+        maxLength: integer = 100000
+      returns: "{ text: string, truncated: boolean, safe: boolean }"
+      guarantees:
+        - "strips control chars > U+007F except newline/tab"
+        - "escapes HTML/markdown interpolation chars"
+        - "rejects path-like segments (../, \\, absolute paths)"
+    sanitizeFileMeta:
+      input:
+        meta: "FileMeta"
+      returns: "FileMeta (name reduced to leaf, mime validated)"
+    validateSchema:
+      input:
+        obj: "any"
+        schemaId: "string"
+      returns: "{ valid: boolean, errors?: ValidationError[] }"
+      guarantees:
+        - "runs on every IPC boundary from renderer to Domain Engine"
+        - "Domain Engine RE-validates (defense in depth)"
+    sanitizeAIOutput:
+      input:
+        aiOutput: "AIOutput"
+      returns: "AIOutput (text sanitized, provenance/confidence preserved)"
+
+trust_boundary:
+  - "Everything entering TZ-A must pass through here first"
+  - "Also Domain Engine re-validates (defense in depth)"
+
+verification_path:
+  tests:
+    - sanitizer_rejects_path_traversal
+    - sanitizer_escapes_markdown_injection
+    - sanitizer_rejects_mime_spoof

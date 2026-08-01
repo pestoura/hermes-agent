@@ -1,0 +1,50 @@
+schema_version: "1.0"
+contract_id: blitzhub-cra-migration
+namespace: com.blitzhub.cra.migration
+stability: stable
+owner: backend-domain-engineer
+
+description: >
+  Interface do motor de migrações do Local Store. Aplicado sequencialmente no boot,
+  antes de qualquer leitura. Breaking changes = MAJOR bump + migration.
+
+interface:
+  MigrationEngine:
+    currentVersion:
+      returns: "string (MAJOR.MINOR.PATCH)"
+    pendingMigrations:
+      returns: "MigrationSpec[] (ordered, unapplied)"
+    migrate:
+      input:
+        toVersion: "string"
+      returns: "MigrationResult { from, to, ok, applied: string[], error?: string }"
+      guarantees:
+        - "atomic per step (BEGIN IMMEDIATE...COMMIT)"
+        - "rollback on failure"
+        - "record in migrations_log (idempotent)"
+        - "re-run is a no-op"
+
+migration_spec:
+  from: "string"
+  to: "string"
+  steps:
+    - "sql statements (declarative)"
+  reversible: "boolean"
+  destructive_steps_held_for: "2 MAJOR versions before purge"
+
+migration_script_path: "migrations/<from>-<to>.sql"
+location: "bundled in app asar; copied to local migrations/ on first run"
+
+destructive_policy:
+  - "Columns/tables to drop are renamed _pending_drop_<v>, retained for 2 MAJOR versions"
+  - "Backup taken before destructive migration (store.backup)"
+
+backup_aware:
+  - "backup carries current version"
+  - "restore runs pending migrations to reach current app version"
+
+verification_path:
+  tests:
+    - store_migrate_preserves_data
+    - backup_restore_roundtrip
+    - migration_is_idempotent

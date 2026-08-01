@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "origin": "chatgpt-supervisor",
+  "timestamp_utc": "2026-07-31T17:12:00Z",
+  "wave_decision": {
+    "wave-1": {"status":"active","decision":"maintain","reason":"Foundation deliverables remain under review or blocked."},
+    "wave-2": {"status":"pending","decision":"do_not_activate","reason":"Regulatory catalogue and architecture baseline are not yet accepted; requirements schema is blocked."},
+    "wave-3": {"status":"pending","decision":"do_not_activate","reason":"No accepted functional end-to-end implementation exists."}
+  },
+  "dispatch": [
+    {"issue":3,"agent":"regulatory-research-engineer","action":"rework_required","reason":"Official-source metadata errors in PR #16."},
+    {"issue":6,"agent":"devops-repository-engineer","action":"deduplicate_before_review","reason":"PR #17 and PR #20 overlap."},
+    {"issue":4,"agent":"requirements-traceability-engineer","action":"remain_blocked","reason":"Dependency #3 is not accepted."}
+  ]
+}

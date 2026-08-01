@@ -1,0 +1,54 @@
+schema_version: "1.0"
+contract_id: blitzhub-cra-ai-assistant
+namespace: com.blitzhub.cra.ai
+stability: stable
+owner: backend-domain-engineer
+
+description: >
+  Interface do AI Assistant (Zona D, optional). NUNCA é fonte de verdade.
+  Output sempre carrega proveniância + confidence.
+
+interface:
+  AIAssistant:
+    summarise:
+      input:
+        text: "string"
+        traceId: "string"
+        grounding: "EvidenceRef[] (optional)"
+      returns: "AIOutput"
+    tagEvidence:
+      input:
+        evidenceId: "string"
+        traceId: "string"
+        context: "string (optional)"
+      returns: "AIOutput { tags: string[] }"
+    isAvailable:
+      returns: "boolean"
+      description: "True se local LLM runtime estiver loaded e pronto"
+
+ai_output_contract:
+  fields:
+    text: { type: string }
+    confidence: { type: number, min: 0.0, max: 1.0 }
+    provenance: { type: literal, value: "ai-assistant" }
+    traceId: { type: string }
+    grounding: { type: "EvidenceRef[] (optional)" }
+    expiresAt: { type: date-time, description: "propostas expiram em 24h de inatividade" }
+    human_review_required_below_confidence: 0.8
+
+behavior_when_unavailable:
+  - "domain-engine continues deterministic flow unchanged"
+  - "UI disables AI suggestions; tooltips explain degrade mode"
+  - "ai.enabled feature flag default false"
+  - "no AI output is cached or persisted as domain decision"
+
+trust_boundary:
+  - "AI Assistant is TZ-D (untrusted/optional)"
+  - "AI output NEVER goes to Rules Engine directly"
+  - "AI output to Domain Engine requires user confirmation (confidence < 0.8)"
+
+verification_path:
+  tests:
+    - ai_output_never_reaches_rule_decision
+    - confidence_below_threshold_requires_human
+    - deterministic_decision_stable_with_ai_disabled

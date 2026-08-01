@@ -1,0 +1,59 @@
+# Gitleaks configuration for BlitzHub CRA Navigator
+# Aligns with .blitzhub/policies/public-repository-policy.yaml publication guards.
+# This config is intentionally restrictive: known patterns are flagged, and
+# false-positive allowances are scoped to specific test fixture paths only.
+
+title = "BlitzHub CRA Navigator secret scanning"
+
+[extend]
+# Use built-in gitleaks default rules as a baseline.
+use_default = true
+
+[[rules]]
+description = "Generic API key assignment in YAML"
+id = "generic-api-key-yaml"
+path = '''[^.]+\.ya?ml$'''
+regex = '''(?i)(api[_-]?key|apikey|secret[_-]?key|access[_-]?token)\s*[:=]\s*['\"]?[A-Za-z0-9/+=]{16,}['\"]?'''
+severity = "HIGH"
+
+[[rules]]
+description = "AWS access key ID"
+id = "aws-access-key-id"
+path = '''[^.]+\.(ya?ml|py|js|ts|sh|env)?$'''
+regex = '''AKIA[0-9A-Z]{16}'''
+severity = "HIGH"
+
+[[rules]]
+description = "GitHub classic token"
+id = "github-classic-token"
+path = '''[^.]+\.(ya?ml|py|js|ts|sh|env|md)?$'''
+regex = '''ghp_[A-Za-z0-9]{36}'''
+severity = "HIGH"
+
+[[rules]]
+description = "GitHub fine-grained token"
+id = "github-fine-grained-token"
+path = '''[^.]+\.(ya?ml|py|js|ts|sh|env|md)?$'''
+regex = '''github_pat_[A-Za-z0-9_]{22,}'''
+severity = "HIGH"
+
+[[rules]]
+description = "Private key header"
+id = "private-key"
+path = '''[^.]+\.(ya?ml|py|js|ts|sh|env|md|pem|key)?$'''
+regex = '''-----BEGIN (RSA |EC |DSA |OPENSSH |PGP )?PRIVATE KEY-----'''
+severity = "CRITICAL"
+
+[[rules]]
+description = "Slack token"
+id = "slack-token"
+path = '''[^.]+\.(ya?ml|py|js|ts|sh|env|md)?$'''
+regex = '''xox[baprs]-[A-Za-z0-9-]{10,}'''
+severity = "HIGH"
+
+[allowlist]
+description = "Allowlist for test fixtures that intentionally contain fake secret patterns."
+paths = [
+  "tests/",
+  "fixtures/",
+]

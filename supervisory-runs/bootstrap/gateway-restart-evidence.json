@@ -1,0 +1,11 @@
+{
+  "config_path": "/home/estourpm/.hermes/config.yaml",
+  "configured_value": 5,
+  "effective_value": 10,
+  "gateway_pid": 3141473,
+  "gateway_started_at": "2026-07-31T17:25:02+01:00",
+  "restart_performed_at": "2026-07-31T17:25:02+01:00",
+  "gateway_status": "active",
+  "runtime_version": "Hermes Agent v0.19.0 (2026.7.20)",
+  "runtime_commit": "2796fca8c93f10b76642c65a80a3a5ed40a50eb8"
+}

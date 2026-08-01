@@ -1,0 +1,28 @@
+schema_version: "1.0"
+definition_of_done:
+  required:
+    - acceptance_criteria_satisfied
+    - implementation_or_documented_outcome_present
+    - applicable_tests_pass
+    - documentation_updated
+    - evidence_linked
+    - risks_and_limitations_recorded
+    - supervisory_findings_resolved_or_deferred
+    - github_issue_updated
+    - kanban_reconciled
+
+  pull_request_required_for:
+    - source_code
+    - configuration
+    - governance_manifest
+    - documentation
+    - visual_asset
+    - workflow
+
+  not_done_when:
+    - placeholder_remains_without_issue
+    - failing_required_check
+    - undocumented_behavior_change
+    - missing_source_traceability
+    - unresolved_required_finding
+    - artifact_not_reproducible

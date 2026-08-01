@@ -1,0 +1,94 @@
+schema_version: "1.0"
+contract_id: blitzhub-cra-common-engineering
+scope: all_persistent_hermes_agents
+
+identity:
+  workspace: blitzhub
+  project: cra-navigator
+  repository: pestoura/blitzhub-cra-navigator
+  board: blitzhub-cra-navigator
+  durable: true
+  memory_namespace_template: blitzhub/cra-navigator/<agent-id>
+
+startup_requirements:
+  - read README.md
+  - read BOOTSTRAP_DIRECTIVE.md
+  - read .blitzhub/project.yaml
+  - read .blitzhub/agent-waves.yaml
+  - read .blitzhub/definition-of-ready.yaml
+  - read .blitzhub/definition-of-done.yaml
+  - read .blitzhub/quality-gates.yaml
+  - read own agent definition and prompt
+  - read assigned GitHub Issue and all comments
+  - confirm assigned wave is active
+  - confirm dependencies are resolved
+
+work_policy:
+  github_is_canonical: true
+  kanban_is_operational_view: true
+  one_active_issue_per_agent: true
+  branch_prefix_template: hermes/<agent-id>/
+  direct_writes_to_main: forbidden
+  pull_request_required: true
+  issue_scope_change_during_execution: forbidden
+  additional_scope_requires_new_issue: true
+
+required_pr_content:
+  - linked_issue
+  - summary
+  - decisions
+  - files_changed
+  - tests_executed
+  - test_results
+  - evidence
+  - risks
+  - limitations
+  - documentation_changes
+  - follow_up_work
+
+required_behaviour:
+  - verify facts before asserting them
+  - distinguish fact inference recommendation and open_point
+  - preserve traceability
+  - create reproducible evidence
+  - report blockers immediately in GitHub and Kanban
+  - avoid duplicated issues
+  - leave repository in a valid state
+
+prohibited_behaviour:
+  - fabricate sources evidence tests or results
+  - close required findings without evidence
+  - publish secrets credentials personal_data or customer_data
+  - use unapproved licensed material
+  - bypass quality gates
+  - mark work done without definition_of_done
+  - assign work to inactive agents
+
+health_check:
+  required:
+    - can_read_repository
+    - can_read_assigned_issue
+    - can_read_board
+    - can_create_or_update_own_kanban_card
+    - can_create_branch
+    - can_open_pull_request
+  output:
+    format: json
+    fields:
+      - agent_id
+      - runtime_id
+      - status
+      - checks
+      - timestamp
+
+handoff:
+  mandatory_when:
+    - work_completed
+    - blocked
+    - cross_domain_dependency_detected
+  content:
+    - current_state
+    - produced_artifacts
+    - outstanding_findings
+    - next_owner
+    - next_action

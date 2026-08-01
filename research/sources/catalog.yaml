@@ -1,0 +1,776 @@
+schema_version: '1.0'
+catalog:
+- id: cra-regulation-2024-2847
+  authority: European Parliament and of the Council
+  document_identifier: Regulation (EU) 2024/2847
+  celex: 32024R2847
+  title: 'Regulation (EU) 2024/2847 of the European Parliament and of the Council
+    of 23 October 2024 on horizontal cybersecurity requirements for products with
+    digital elements and amending Regulations (EU) No 168/2013 and (EU) 2019/1020
+    and Directive (EU) 2020/1828 (Cyber Resilience Act)
+
+    '
+  short_title: Cyber Resilience Act (CRA)
+  oj_reference: OJ L, 2024/2847, 20.11.2024, p. 1-43
+  article_or_section:
+    chapters:
+      I: Articles 1-12 — General Provisions (scope, definitions, interplay)
+      II: Articles 13-26 — Obligations of economic operators and FO-SO provisions
+      III: Articles 27-34 — Conformity of the product with digital elements
+      IV: Articles 35-51 — Notification of conformity assessment bodies
+      V: Articles 52-60 — Market surveillance and enforcement
+      VI: Articles 61-62 — Delegated powers and committee procedure
+      VII: Articles 63-64 — Confidentiality and penalties
+      VIII: Articles 66-71 — Transitional and final provisions
+    key_articles:
+      1: Scope — products with digital elements placed on the EU market
+      2: Definitions — product with digital elements, economic operator, etc.
+      5: Market availability of products with digital elements
+      6: Placing on the market and making available
+      7: Essential cybersecurity requirements for products with digital elements
+      8: Cybersecurity risk assessment
+      13: Obligations of manufacturers
+      14: Reporting obligations for actively exploited vulnerabilities and incidents
+      15: voluntary reporting
+      16: establishment and operation of the Single Reporting Platform
+      17: Authorised representative
+      18: Importer
+      19: Distributor
+      21: Free and open-source software — obligations of stewards
+      22: Micro-enterprise and small enterprise — exemptions from penalties
+      23: Products developed on the basis of fair and open-source software
+      24: Cybersecurity policy for open-source software stewards
+      25: Open-source software steward — cooperation with authorities
+      26: Commission guidance
+      27: Presumption of conformity and harmonised standards
+      32: Conformity assessment procedures
+      33: EU declaration of conformity
+      35: General obligations of Member States
+      36: Notifying authorities
+      43: Notification of conformity assessment bodies
+      52: Market surveillance authorities
+      53: Safeguard clause
+      64: Penalties
+      69: Relationship with other Union legislation
+      71: Review
+    annexes:
+      I: Essential cybersecurity requirements
+      II: Information and instructions to the user
+      III: Important products with digital elements
+      IV: Critical products with digital elements
+      V: EU declaration of conformity (model)
+      VI: Simplified EU declaration of conformity (model)
+      VII: Content of the technical documentation
+      VIII: Conformity assessment procedures
+    references:
+      article_14: mandatory reporting obligations for actively exploited vulnerabilities
+        and severe incidents
+      article_15: voluntary reporting
+      article_16: establishment and operation of the Single Reporting Platform
+  entry_into_force: '2024-12-10'
+  application_start: '2027-12-11'
+  partial_application:
+    chapter_iv: 2026-06-11 — notification of conformity assessment bodies
+    article_14: 2026-09-11 — reporting obligations
+  source_url: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R2847
+  eli_url: https://eur-lex.europa.eu/eli/reg/2024/2847/oj/eng
+  summary_url: https://digital-strategy.ec.europa.eu/en/policies/cra-summary
+  publication_or_version_date: '2024-11-20'
+  retrieved_at: '2026-07-31'
+  validation_date: '2026-07-31'
+  source_type: primary_regulation
+  validation_status: verified_directly
+  jurisdiction: European Union
+  language: en
+  metadata_quality:
+    has_authority: true
+    has_document_identifier: true
+    has_article_or_section: true
+    has_canonical_url: true
+    has_publication_date: true
+    has_retrieval_date: true
+    has_source_type: true
+    has_validation_status: true
+- id: delegated-regulation-2025-1535
+  authority: European Commission
+  document_identifier: Commission Delegated Regulation (EU) 2025/1535
+  celex: 32025R1535
+  title: 'Commission Delegated Regulation (EU) 2025/1535 of 29 July 2025 supplementing
+    Regulation (EU) 2024/2847 of the European Parliament and of the Council with regard
+    to an exclusion from the application of that Regulation for certain products with
+    digital elements falling within the scope of Regulation (EU) No 168/2013 of the
+    European Parliament and of the Council
+
+    '
+  short_title: CRA — Delegated Regulation (exclusion for vehicles under R155)
+  oj_reference: OJ L, 2025/1535, 29.10.2025
+  article_or_section:
+    key_articles:
+      1: âmbito da exclusão
+      2: entrada em vigor
+  source_url: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32025R1535
+  eli_url: https://eur-lex.europa.eu/eli/reg_del/2025/1535/oj/eng
+  entry_into_force: '2025-11-18'
+  publication_or_version_date: '2025-10-29'
+  retrieved_at: '2026-07-31'
+  validation_date: '2026-07-31'
+  source_type: delegated_act
+  validation_status: verified_directly
+  jurisdiction: European Union
+  language: en
+  metadata_quality:
+    has_authority: true
+    has_document_identifier: true
+    has_article_or_section: true
+    has_canonical_url: true
+    has_publication_date: true
+    has_retrieval_date: true
+    has_source_type: true
+    has_validation_status: true
+- id: implementing-regulation-2025-2392
+  authority: European Commission
+  document_identifier: Commission Implementing Regulation (EU) 2025/2392
+  celex: 32025R2392
+  title: 'Commission Implementing Regulation (EU) 2025/2392 of 28 November 2025 on
+    the technical description of the categories of important and critical products
+    with digital elements pursuant to Regulation (EU) 2024/2847 of the European Parliament
+    and of the Council
+
+    '
+  short_title: CRA — Implementing Regulation (technical descriptions of important/critical
+    products)
+  oj_reference: OJ L, 2025/2392, 1.12.2025, p. 1-10
+  article_or_section:
+    annexes:
+      Annex I: technical descriptions corresponding to CRA Annex III
+      Annex II: technical descriptions corresponding to CRA Annex IV
+  entry_into_force: '2025-12-21'
+  application_start: '2025-12-21'
+  source_url: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32025R2392
+  eli_url: https://eur-lex.europa.eu/eli/reg_impl/2025/2392/oj/eng
+  publication_or_version_date: '2025-12-01'
+  retrieved_at: '2026-07-31'
+  validation_date: '2026-07-31'
+  source_type: implementing_act
+  validation_status: verified_directly
+  jurisdiction: European Union
+  language: en
+  metadata_quality:
+    has_authority: true
+    has_document_identifier: true
+    has_article_or_section: true
+    has_canonical_url: true
+    has_publication_date: true
+    has_retrieval_date: true
+    has_source_type: true
+    has_validation_status: true
+- id: cybersecurity-act-2019-881
+  authority: European Parliament and of the Council
+  document_identifier: Regulation (EU) 2019/881
+  celex: 32019R0881
+  title: Regulation (EU) 2019/881 of 17 April 2019 on ENISA (the European Union Agency
+    for Cybersecurity) and on information and communications technology cybersecurity
+    certification and repealing Regulation (EU) No 526/2013
+  short_title: Cybersecurity Act (ENISA mandate + certification framework)
+  oj_reference: OJ L 151, 7.6.2019, p. 15-69
+  article_or_section:
+    key_articles:
+      1: Subject matter, scope and definitions
+      2: European Union Agency for Cybersecurity (ENISA)
+  source_url: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32019R0881
+  eli_url: https://eur-lex.europa.eu/eli/reg/2019/881/oj/eng
+  entry_into_force: '2019-06-27'
+  publication_or_version_date: '2019-06-07'
+  retrieved_at: '2026-07-31'
+  validation_date: '2026-07-31'
+  source_type: related_legislation
+  validation_status: verified_directly
+  jurisdiction: European Union
+  language: en
+  metadata_quality:
+    has_authority: true
+    has_document_identifier: true
+    has_article_or_section: true
+    has_canonical_url: true
+    has_publication_date: true
+    has_retrieval_date: true
+    has_source_type: true
+    has_validation_status: true
+- id: market-surveillance-reg-2019-1020
+  authority: European Parliament and of the Council
+  document_identifier: Regulation (EU) 2019/1020
+  celex: 32019R1020
+  title: 'Regulation (EU) 2019/1020 of the European Parliament and of the Council
+    of 20 June 2019 on market surveillance and compliance of products and amending
+    Directive 2004/42/EC and Regulations (EC) No 765/2008 and (EU) No 305/2011
+
+    '
+  short_title: Market Surveillance and Compliance of Products
+  oj_reference: OJ L 169, 25.6.2019, p. 1-44
+  article_or_section:
+    key_articles:
+      1: Subject matter, scope and definitions
+      2: Definitions
+  source_url: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32019R1020
+  eli_url: https://eur-lex.europa.eu/eli/reg/2019/1020/oj/eng
+  entry_into_force: '2019-07-15'
+  publication_or_version_date: '2019-06-25'
+  retrieved_at: '2026-07-31'
+  validation_date: '2026-07-31'
+  source_type: related_legislation
+  validation_status: verified_directly
+  jurisdiction: European Union
+  language: en
+  metadata_quality:
+    has_authority: true
+    has_document_identifier: true
+    has_article_or_section: true
+    has_canonical_url: true
+    has_publication_date: true
+    has_retrieval_date: true
+    has_source_type: true
+    has_validation_status: true
+- id: nis2-directive-2022-2555
+  authority: European Parliament and of the Council
+  document_identifier: Directive (EU) 2022/2555
+  celex: 32022L2555
+  title: 'Directive (EU) 2022/2555 of the European Parliament and of the Council of
+    14 December 2022 on measures for a high common level of cybersecurity across the
+    Union, amending Regulation (EU) No 910/2014 and Directive (EU) 2018/1972, and
+    repealing Directive (EU) 2016/1148 (NIS2 Directive)
+
+    '
+  short_title: NIS2 Directive
+  oj_reference: OJ L 333, 27.12.2022, p. 80-152
+  article_or_section:
+    key_articles:
+      1: Subject matter, scope and definitions
+  source_url: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32022L2555
+  eli_url: https://eur-lex.europa.eu/eli/dir/2022/2555/oj/eng
+  entry_into_force: '2023-01-03'
+  publication_or_version_date: '2022-12-14'
+  retrieved_at: '2026-07-31'
+  validation_date: '2026-07-31'
+  source_type: related_legislation
+  validation_status: verified_directly
+  jurisdiction: European Union
+  language: en
+  metadata_quality:
+    has_authority: true
+    has_document_identifier: true
+    has_article_or_section: true
+    has_canonical_url: true
+    has_publication_date: true
+    has_retrieval_date: true
+    has_source_type: true
+    has_validation_status: true
+- id: commission-guidance-cra-2026-5252
+  authority: European Commission
+  document_identifier: C(2026) 5252 final
+  title: 'Commission guidance on the application of Regulation (EU) 2024/2847 (Cyber
+    Resilience Act)
+
+    '
+  short_title: Commission CRA Implementation Guidance (2026)
+  oj_reference: null
+  article_or_section:
+    sections:
+      '1.1': The Cyber Resilience Act — scope and purpose
+      '1.2': Purpose of the guidance
+      '2.1': Placing on the market
+      '2.2': Software as a product with digital elements
+      '2.3': Computer code
+      '2.4': Combination of hardware and software forming a product with digital elements
+      '2.5': Data connection
+      '2.6': Complex systems
+      '2.7': Products designed before the CRA entered into application
+      '3.1': Determining if FOSS is under one's responsibility
+      '3.2': Determining if FOSS is placed on the EU market
+      '3.3': Open-source software stewards
+      '4.1': Physical repairs
+      '4.2': Spare parts
+      '4.3': Software updates as substantial modifications
+      '4.4': Consequences of a substantial modification
+      '5.0': Support period
+      '6.0': Important and critical products
+      '6.2': Conformity assessment for important and critical products
+      '6.3': Presumption of conformity
+      '7.0': Cybersecurity risk assessment and integration
+  publication_or_version_date: '2026-07-27'
+  retrieved_at: '2026-07-31'
+  validation_date: '2026-07-31'
+  source_type: commission_guidance
+  validation_status: pending_review
+  jurisdiction: European Union
+  language: en
+  access_note: 'Two official documents: (1) Communication C(2026) 5252 final approving
+    the guidance content; (2) Annex — Commission guidance on the application of the
+    CRA (84-page document). Both published on the EC digital-strategy newsroom on
+    27 July 2026. Download links: https://ec.europa.eu/newsroom/dae/redirection/document/131455
+    (Communication) https://ec.europa.eu/newsroom/dae/redirection/document/131456
+    (Annex). CC BY 4.0 — reuse permitted with attribution. The guidance is non-binding;
+    authoritative interpretation can only be given by the CJEU.
+
+    '
+  source_url: https://digital-strategy.ec.europa.eu/en/library/commission-publishes-new-guidance-support-timely-cyber-resilience-act-implementation
+  metadata_quality:
+    has_authority: true
+    has_document_identifier: true
+    has_article_or_section: true
+    has_canonical_url: true
+    has_publication_date: true
+    has_retrieval_date: true
+    has_source_type: true
+    has_validation_status: true
+- id: ec-faqs-cra-2025
+  authority: European Commission
+  document_identifier: FAQs on the Cyber Resilience Act (version 1.3)
+  title: FAQs on the Cyber Resilience Act
+  short_title: EC FAQs on CRA implementation
+  oj_reference: null
+  article_or_section:
+    sections:
+      '1': Scope
+      '1.1': When is a product with digital elements in scope?
+      '1.2': What is a product with digital elements?
+      '1.3': Direct or indirect logical/physical data connection
+      '1.4': Products placed on the market before 11 December 2027
+      '1.5': Manufacturer only products
+      '1.6': Non-compliant software for testing
+      '1.7': Publicly accessible software archives
+      '1.8': National security/defence products
+      '1.9': Products under other Union legislation
+      '2': Interplay with other legislation
+      '3': Important and critical products
+      '4': Manufacturer's obligations
+      '5': Obligations of other economic operators
+      '6': Conformity assessment
+  publication_or_version_date: '2026-07-02'
+  retrieved_at: '2026-07-31'
+  validation_date: '2026-07-31'
+  source_type: faq
+  validation_status: pending_review
+  jurisdiction: European Union
+  language: en
+  access_note: 'Published as PDF by the European Commission. Download via https://ec.europa.eu/newsroom/dae/redirection/document/122331.
+    CC BY 4.0 — reuse permitted with attribution. Version 1.3, last updated 2 July
+    2026.
+
+    '
+  source_url: https://ec.europa.eu/newsroom/dae/redirection/document/122331
+  metadata_quality:
+    has_authority: true
+    has_document_identifier: true
+    has_article_or_section: true
+    has_canonical_url: true
+    has_publication_date: true
+    has_retrieval_date: true
+    has_source_type: true
+    has_validation_status: true
+- id: ec-cra-factpage-implementation
+  authority: European Commission, Directorate-General CONNECT
+  document_identifier: Cyber Resilience Act - Implementation
+  title: Cyber Resilience Act - Implementation
+  short_title: EC CRA Implementation Fact Page
+  oj_reference: null
+  article_or_section:
+    content: Overview of implementation timeline, stakeholder roles, standardisation,
+      reporting obligations, conformity assessment, and links to official documents.
+  publication_or_version_date: '2026-07-07'
+  retrieved_at: '2026-07-31'
+  validation_date: '2026-07-31'
+  source_type: commission_guidance
+  validation_status: pending_review
+  jurisdiction: European Union
+  language: en
+  access_note: 'Official EC fact page with implementation timeline, stakeholder links,
+    and references to guidance documents, FAQs, and EUR-Lex legal texts. Last updated
+    7 July 2026.
+
+    '
+  source_url: https://digital-strategy.ec.europa.eu/en/factpages/cyber-resilience-act-implementation
+  metadata_quality:
+    has_authority: true
+    has_document_identifier: true
+    has_article_or_section: true
+    has_canonical_url: true
+    has_publication_date: true
+    has_retrieval_date: true
+    has_source_type: true
+    has_validation_status: true
+- id: ec-cra-summary
+  authority: European Commission, Directorate-General CONNECT
+  document_identifier: The Cyber Resilience Act - Summary of the legislative text
+  title: The Cyber Resilience Act - Summary of the legislative text
+  short_title: EC CRA legislative text summary
+  oj_reference: null
+  article_or_section:
+    content: Chapter-by-chapter summary of Regulation (EU) 2024/2847, covering scope
+      (Ch I), economic operator obligations (Ch II), conformity assessment (Ch III),
+      notified bodies (Ch IV), market surveillance (Ch V), delegated acts (Ch VI),
+      confidentiality/penalties (Ch VII), and transitional provisions (Ch VIII). Includes
+      summaries of Annexes I through VIII.
+    chapters:
+      I: Articles 1-12 — General Provisions
+      II: Articles 13-26 — Economic operator obligations
+      III: Articles 27-34 — Conformity assessment
+      IV: Articles 35-51 — Notified bodies
+      V: Articles 52-60 — Market surveillance
+      VI: Articles 61-62 — Delegated powers
+      VII: Articles 63-64 — Confidentiality and penalties
+      VIII: Articles 66-71 — Final provisions
+  publication_or_version_date: '2026-07-27'
+  retrieved_at: '2026-07-31'
+  validation_date: '2026-07-31'
+  source_type: commission_guidance
+  validation_status: pending_review
+  jurisdiction: European Union
+  language: en
+  access_note: 'Prepared by Commission services. Not an official interpretation —
+    states "This summary has been prepared by the Commission services and is not meant
+    to systematically cover the full scope of the Regulation. This summary is not
+    representative of the European Commission''s official position."
+
+    '
+  source_url: https://digital-strategy.ec.europa.eu/en/policies/cra-summary
+  metadata_quality:
+    has_authority: true
+    has_document_identifier: true
+    has_article_or_section: true
+    has_canonical_url: true
+    has_publication_date: true
+    has_retrieval_date: true
+    has_source_type: true
+    has_validation_status: true
+- id: ec-cra-policy-page
+  authority: European Commission, Directorate-General CONNECT
+  document_identifier: Cyber Resilience Act (policy page)
+  title: Cyber Resilience Act
+  short_title: EC CRA policy page
+  oj_reference: null
+  article_or_section:
+    content: Overview of the CRA, entry into force and application dates, relationship
+      to EU Cybersecurity Strategy and NIS2 Directive, and links to sub-pages on manufacturers,
+      member states, MSMEs, open source, standardisation, and reporting obligations.
+  publication_or_version_date: '2026-07-27'
+  retrieved_at: '2026-07-31'
+  validation_date: '2026-07-31'
+  source_type: commission_guidance
+  validation_status: pending_review
+  jurisdiction: European Union
+  language: en
+  access_note: 'Official EC policy page. Last updated 27 July 2026. Provides the authoritative
+    landing page for all CRA-related content on the EC digital-strategy site.
+
+    '
+  source_url: https://digital-strategy.ec.europa.eu/en/policies/cyber-resilience-act
+  metadata_quality:
+    has_authority: true
+    has_document_identifier: true
+    has_article_or_section: true
+    has_canonical_url: true
+    has_publication_date: true
+    has_retrieval_date: true
+    has_source_type: true
+    has_validation_status: true
+- id: eu-cybersecurity-strategy-2020
+  authority: European Commission
+  document_identifier: EU Cybersecurity Strategy for the period 2020-2027
+  title: EU Cybersecurity Strategy
+  short_title: EU Cybersecurity Strategy
+  oj_reference: null
+  article_or_section:
+    content: The CRA builds on the 2020 EU Cybersecurity Strategy. Provides context
+      for the CRA but is not a regulatory authority itself.
+  publication_or_version_date: '2020-12-16'
+  retrieved_at: '2026-07-31'
+  validation_date: '2026-07-31'
+  source_type: related_legislation
+  validation_status: pending_review
+  jurisdiction: European Union
+  language: en
+  access_note: 'Strategic document that provides the policy context for the CRA. Not
+    a legal act — used for context only.
+
+    '
+  source_url: https://digital-strategy.ec.europa.eu/en/policies/cybersecurity-strategy
+  metadata_quality:
+    has_authority: true
+    has_document_identifier: true
+    has_article_or_section: true
+    has_canonical_url: true
+    has_publication_date: true
+    has_retrieval_date: true
+    has_source_type: true
+    has_validation_status: true
+- id: enisa-authority-home
+  authority: European Union Agency for Cybersecurity (ENISA)
+  document_identifier: ENISA — European Union Agency for Cybersecurity
+  title: ENISA — European Union Agency for Cybersecurity
+  short_title: ENISA home page
+  oj_reference: null
+  article_or_section:
+    content: ENISA is the Union's agency dedicated to achieving a high common level
+      of cybersecurity across Europe. Mandate granted by Regulation (EU) 2019/881
+      (Cybersecurity Act). Operates the CRA Single Reporting Platform per Article
+      16 of the CRA.
+  publication_or_version_date: '2026-07-31'
+  retrieved_at: '2026-07-31'
+  validation_date: '2026-07-31'
+  source_type: authority_website
+  validation_status: pending_review
+  jurisdiction: European Union
+  language: en
+  access_note: 'Authority website. The publication_or_version_date reflects the retrieval
+    date as an authority website has no single publication date. Used as the canonical
+    reference for ENISA''s role under the CRA.
+
+    '
+  source_url: https://www.enisa.europa.eu/
+  metadata_quality:
+    has_authority: true
+    has_document_identifier: true
+    has_article_or_section: true
+    has_canonical_url: true
+    has_publication_date: true
+    has_retrieval_date: true
+    has_source_type: true
+    has_validation_status: true
+- id: enisa-srp-page
+  authority: European Union Agency for Cybersecurity (ENISA)
+  document_identifier: CRA Single Reporting Platform (SRP)
+  title: Single Reporting Platform (SRP)
+  short_title: ENISA CRA SRP overview page
+  oj_reference: null
+  article_or_section:
+    content: The CRA introduces the Single Reporting Platform (SRP) for cybersecurity
+      incident reporting in the EU Digital Single Market. The SRP will be used by
+      CSIRTs and manufacturers for mandatory reporting under Articles 14 and 15 and
+      could be used by any natural/legal persons for voluntary reporting under Article
+      15. The SRP is established and operated under Article 16 of the CRA. The CRA
+      mandates manufacturers to report actively exploited vulnerabilities and severe
+      incidents as of 11 September 2026 onwards using the SRP. Updated 27 July 2026.
+    references:
+      article_14: mandatory reporting obligations
+      article_15: voluntary reporting
+      article_16: establishment and operation of the Single Reporting Platform
+  interpretation_note: The phrase "could be used by any natural/legal persons for
+    voluntary reporting" in the article_or_section content is an interpretation of
+    the regulation text. Regulation (EU) 2024/2847 Article 15(3) states that the SRP
+    "may also" be used for voluntary reporting; the word "could" reflects ENISA's
+    summarisation rather than a binding obligation.
+  publication_or_version_date: '2026-07-27'
+  retrieved_at: '2026-07-31'
+  validation_date: '2026-07-31'
+  source_type: enisa_tool
+  validation_status: pending_review
+  jurisdiction: European Union
+  language: en
+  access_note: 'ENISA landing page for the SRP. Contains SRP FAQs (updated 27 July
+    2026) and links to CRA reporting information at https://digital-strategy.ec.europa.eu/en/policies/cra-reporting.
+
+    '
+  source_url: https://www.enisa.europa.eu/topics/product-security-and-certification/single-reporting-platform-srp
+  metadata_quality:
+    has_authority: true
+    has_document_identifier: true
+    has_article_or_section: true
+    has_canonical_url: true
+    has_publication_date: true
+    has_retrieval_date: true
+    has_source_type: true
+    has_validation_status: true
+- id: enisa-srp-notification
+  authority: European Union Agency for Cybersecurity (ENISA)
+  document_identifier: CRA SRP - AR Notification submission and update
+  title: CRA SRP - AR Notification submission and update
+  short_title: CRA Single Reporting Platform (SRP) — Notification
+  oj_reference: null
+  article_or_section:
+    content: ENISA operates the CRA Single Reporting Platform where economic operators
+      report actively exploited vulnerabilities and incidents. This tool describes
+      notification workflows under Articles 14 and 15. The Single Reporting Platform
+      itself is established and operated by ENISA under Article 16 of the CRA.
+  publication_or_version_date: '2026-07-31'
+  retrieved_at: '2026-07-31'
+  validation_date: '2026-07-31'
+  source_type: enisa_tool
+  validation_status: pending_review
+  jurisdiction: European Union
+  language: en
+  access_note: 'ENISA-operated tool page. The publication_or_version_date reflects
+    the retrieval date as it is a live application page with no fixed publication
+    date.
+
+    '
+  source_url: https://www.enisa.europa.eu/cra-srp-ar-notification-submission-and-update
+  metadata_quality:
+    has_authority: true
+    has_document_identifier: true
+    has_article_or_section: true
+    has_canonical_url: true
+    has_publication_date: true
+    has_retrieval_date: true
+    has_source_type: true
+    has_validation_status: true
+- id: enisa-srp-user-registration
+  authority: European Union Agency for Cybersecurity (ENISA)
+  document_identifier: CRA SRP - AR User registration
+  title: CRA SRP - AR User registration
+  short_title: CRA Single Reporting Platform (SRP) — User Registration
+  oj_reference: null
+  article_or_section:
+    content: Describes how economic operators register to use the CRA Single Reporting
+      Platform. The platform is established and operated under Article 16 of the CRA,
+      and supports reporting workflows under Article 14.
+  publication_or_version_date: '2026-07-31'
+  retrieved_at: '2026-07-31'
+  validation_date: '2026-07-31'
+  source_type: enisa_tool
+  validation_status: pending_review
+  jurisdiction: European Union
+  language: en
+  access_note: 'ENISA-operated tool page. The publication_or_version_date reflects
+    the retrieval date as it is a live application page with no fixed publication
+    date.
+
+    '
+  source_url: https://www.enisa.europa.eu/cra-srp-ar-user-registration
+  metadata_quality:
+    has_authority: true
+    has_document_identifier: true
+    has_article_or_section: true
+    has_canonical_url: true
+    has_publication_date: true
+    has_retrieval_date: true
+    has_source_type: true
+    has_validation_status: true
+- id: enisa-sme-cra-survey-2026
+  authority: European Union Agency for Cybersecurity (ENISA)
+  document_identifier: SME CRA Survey Report
+  title: SME CRA Survey Report
+  short_title: ENISA SME CRA Survey Report
+  oj_reference: null
+  article_or_section:
+    content: Survey of micro, small and medium-sized enterprises (SMEs) on awareness
+      of and preparedness for the CRA. The survey aimed to understand how familiar
+      SMEs are with the CRA, how well they understand practical requirements, what
+      they currently do in terms of cybersecurity, and what challenges they expect
+      to face when working towards compliance. Survey conducted in February and March
+      2026. PDF download available at https://www.enisa.europa.eu/sites/default/files/2026-06/SME%20CRA%20survey%20report.pdf.
+  publication_or_version_date: '2026-06-24'
+  retrieved_at: '2026-07-31'
+  validation_date: '2026-07-31'
+  source_type: enisa_publication
+  validation_status: pending_review
+  jurisdiction: European Union
+  language: en
+  access_note: 'Published by ENISA. Available publicly at the ENISA website. Subject
+    to normal ENISA reuse terms (CC BY 4.0 unless otherwise stated).
+
+    '
+  source_url: https://www.enisa.europa.eu/publications/sme-cra-survey-report
+  metadata_quality:
+    has_authority: true
+    has_document_identifier: true
+    has_article_or_section: true
+    has_canonical_url: true
+    has_publication_date: true
+    has_retrieval_date: true
+    has_source_type: true
+    has_validation_status: true
+- id: enisa-technical-competence-cra-notified-bodies-2026
+  authority: European Union Agency for Cybersecurity (ENISA)
+  document_identifier: Technical Competence Requirements for CRA Notified Bodies
+  title: Technical Competence Requirements for CRA Notified Bodies
+  short_title: ENISA Technical Competence Requirements for CRA Notified Bodies
+  oj_reference: null
+  article_or_section:
+    content: High-level competences required for conformity assessment activities
+      under the CRA, including experience and training requirements for personnel
+      employed by notified bodies (Article 43 of the CRA). PDF download available
+      at https://www.enisa.europa.eu/sites/default/files/2026-06/Technical%20Competence%20Requirements%20for%20CABs.pdf.
+  publication_or_version_date: '2026-06-04'
+  retrieved_at: '2026-07-31'
+  validation_date: '2026-07-31'
+  source_type: enisa_publication
+  validation_status: pending_review
+  jurisdiction: European Union
+  language: en
+  access_note: 'Published by ENISA. Available publicly at the ENISA website. Subject
+    to normal ENISA reuse terms.
+
+    '
+  source_url: https://www.enisa.europa.eu/publications/technical-competence-requirements-for-cra-notified-bodies
+  metadata_quality:
+    has_authority: true
+    has_document_identifier: true
+    has_article_or_section: true
+    has_canonical_url: true
+    has_publication_date: true
+    has_retrieval_date: true
+    has_source_type: true
+    has_validation_status: true
+- id: enisa-sme-cyber-resilience-maturity-2026
+  authority: European Union Agency for Cybersecurity (ENISA)
+  document_identifier: SME Cyber Resilience Maturity Assessment Model
+  title: SME Cyber Resilience Maturity Assessment Model
+  short_title: ENISA SME Cyber Resilience Maturity Assessment Model
+  oj_reference: null
+  article_or_section:
+    content: 'Structured approach for micro, small and medium-sized enterprises (SMEs)
+      to evaluate and strengthen their cyber resilience. Focuses on five domains:
+      risk management and security by design and by default, vulnerability and patch
+      management, supply chain security, governance and training, and cyber resilience
+      testing. Includes a downloadable Excel tool (v1.1) at https://www.enisa.europa.eu/sites/default/files/2026-07/CRA_Maturity_Model_TOOL.xlsx.'
+  publication_or_version_date: '2026-07-13'
+  retrieved_at: '2026-07-31'
+  validation_date: '2026-07-31'
+  source_type: enisa_publication
+  validation_status: pending_review
+  jurisdiction: European Union
+  language: en
+  access_note: 'Published by ENISA. Includes downloadable Excel tool (v1.1). Available
+    publicly at the ENISA website. Subject to normal ENISA reuse terms.
+
+    '
+  source_url: https://www.enisa.europa.eu/publications/sme-cyber-resilience-maturity-assessment-model
+  metadata_quality:
+    has_authority: true
+    has_document_identifier: true
+    has_article_or_section: true
+    has_canonical_url: true
+    has_publication_date: true
+    has_retrieval_date: true
+    has_source_type: true
+    has_validation_status: true
+- id: enisa-secure-by-design-playbook-2026
+  authority: European Union Agency for Cybersecurity (ENISA)
+  document_identifier: ENISA Secure by Design and Default Playbook
+  title: ENISA Secure by Design and Default Playbook
+  short_title: ENISA Secure by Design Playbook
+  oj_reference: null
+  article_or_section:
+    content: 22 playbooks covering Secure by Design and Secure by Default principles,
+      relevant to CRA implementation. Available as open-source on GitHub.
+  publication_or_version_date: '2026-07-30'
+  retrieved_at: '2026-07-31'
+  validation_date: '2026-07-31'
+  source_type: enisa_publication
+  validation_status: pending_review
+  jurisdiction: European Union
+  language: en
+  access_note: 'Published by ENISA. Open-source playbooks available on GitHub at https://github.com/enisaeu/enisa-sbd-playbook/.
+    Subject to ENISA reuse terms.
+
+    '
+  source_url: https://www.enisa.europa.eu/publications/enisa-secure-by-design-and-default-playbook
+  metadata_quality:
+    has_authority: true
+    has_document_identifier: true
+    has_article_or_section: true
+    has_canonical_url: true
+    has_publication_date: true
+    has_retrieval_date: true
+    has_source_type: true
+    has_validation_status: true

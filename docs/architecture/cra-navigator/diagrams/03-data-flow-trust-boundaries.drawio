@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Data-flow and trust-boundary diagram for BlitzHub CRA Navigator.
+  Editable source: diagrams/03-data-flow-trust-boundaries.drawio
+  Shows: data flows, trust zones, the AI/Updates external boundaries,
+  and the evidence ingestion pipeline with sanitizers.
+-->
+<mxfile host="github.com" modified="2026-07-31T17:05:00Z" agent="blitzhub-cra-solution-architect" version="26.0.0" etarget="svg">
+  <diagram name="Data Flow & Trust Boundaries" id="data-flow">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fanning="0" page="1" pageWidth="1100" pageHeight="820" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- Trust zone backgrounds (swimlanes) -->
+        <mxCell id="zone-c" value="Trust Zone C&#xa;(Untrusted Input)&#xa;UI Renderer" style="gradientColor=#333333;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=1;dashed=1;dashPattern=5 5;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="320" height="740" as="geometry"/>
+        </mxCell>
+        <mxCell id="zone-a" value="Trust Zone A&#xa;(Trusted Core)&#xa;Domain + Rules" style="gradientColor=#333333;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=1;dashed=1;dashPattern=5 5;" vertex="1" parent="1">
+          <mxGeometry x="400" y="40" width="340" height="740" as="geometry"/>
+        </mxCell>
+        <mxCell id="zone-b" value="Trust Zone B&#xa;(Encrypted Storage)&#xa;Store + Vault" style="gradientColor=#333333;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;strokeWidth=1;dashed=1;dashPattern=5 5;" vertex="1" parent="1">
+          <mxGeometry x="780" y="40" width="320" height="740" as="geometry"/>
+        </mxCell>
+        <mxCell id="zone-d" value="Trust Zone D&#xa;(External)&#xa;Updates + AI" style="gradientColor=#333333;html=1;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=1;dashed=1;dashPattern=5 5;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="40" width="340" height="740" as="geometry"/>
+        </mxCell>
+
+        <!-- Actors -->
+        <mxCell id="user2" value="SME / manufacturer" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="40" y="10" width="160" height="24" as="geometry"/>
+        </mxCell>
+
+        <!-- UI Renderer (Zone C) -->
+        <mxCell id="ui2" value="UI Renderer&#xa;+ frontend-sanitizer" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="80" y="60" width="280" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- Domain Engine (Zone A) -->
+        <mxCell id="domain2" value="Domain Engine&#xa;(orchestration)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="440" y="60" width="260" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- Rules Engine (Zone A) -->
+        <mxCell id="rules2" value="Rules Engine&#xa;(deterministic)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="440" y="170" width="260" height="70" as="geometry"/>
+        </mxCell>
+
+        <!-- Local Store (Zone B) -->
+        <mxCell id="store2" value="Local Store&#xa;(SQLCipher)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="820" y="60" width="240" height="70" as="geometry"/>
+        </mxCell>
+
+        <!-- Evidence Vault (Zone B) -->
+        <mxCell id="vault2" value="Evidence Vault&#xa;(sandboxed fs)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="820" y="170" width="240" height="70" as="geometry"/>
+        </mxCell>
+
+        <!-- Report Generator (Zone A) -->
+        <mxCell id="report2" value="Report Generator&#xa;(static)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="440" y="260" width="260" height="70" as="geometry"/>
+        </mxCell>
+
+        <!-- AI Assistant (Zone D) -->
+        <mxCell id="ai2" value="AI Assistant&#xa;(local LLM, optional)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=2;dashed=1;dashPattern=5 5;" vertex="1" parent="1">
+          <mxGeometry x="1180" y="60" width="220" height="70" as="geometry"/>
+        </mxCell>
+
+        <!-- Update Service (Zone D) -->
+        <mxCell id="upd2" value="Update Service&#xa;(GitHub Releases)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=2;dashed=1;dashPattern=5 5;" vertex="1" parent="1">
+          <mxGeometry x="1180" y="170" width="220" height="70" as="geometry"/>
+        </mxCell>
+
+        <!-- Rule Package (trusted, external to engine) -->
+        <mxCell id="pkg" value="Rule Package&#xa;(trusted, versioned, signed)" style="shape=note;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="440" y="350" width="220" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- === Flow 1: user input (untrusted) === -->
+        <mxCell id="f1" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;strokeColor=#d6b656;strokeWidth=2;" source="user2" target="ui2" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="f1-label" value="1. raw input" style="edgeLabel;html=1;align=center;" parent="f1">
+          <mxGeometry x="0.5" y="-0.1" as="targetPoint"/>
+        </mxCell>
+
+        <!-- === Flow 2: sanitized (C2 -> C3) === -->
+        <mxCell id="f2" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;startSize=6;strokeColor=#6c8ebf;strokeWidth=2;" source="ui2" target="domain2" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2-label" value="2. sanitized + schema-validated" style="edgeLabel;html=1;align=center;" parent="f2">
+          <mxGeometry x="0.5" y="-0.1" as="targetPoint"/>
+        </mxCell>
+        <mxCell id="f2-gate" value="TRUST BOUNDARY C2→C3" style="shape=hexagon;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#999999;strokeWidth=3;" vertex="1" parent="1">
+          <mxGeometry x="370" y="100" width="50" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="f3" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;startSize=6;strokeColor=#6c8ebf;strokeWidth=2;" source="domain2" target="rules2" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="f3-label" value="3. scope/assess request" style="edgeLabel;html=1;align=center;" parent="f3">
+          <mxGeometry x="0.5" y="-0.1" as="targetPoint"/>
+        </mxCell>
+        <mxCell id="f4" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;startSize=6;strokeColor=#6c8ebf;strokeWidth=2;" source="rules2" target="pkg" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="f4-label" value="4. rule evaluation" style="edgeLabel;html=1;align=center;" parent="f4">
+          <mxGeometry x="0.5" y="-0.1" as="targetPoint"/>
+        </mxCell>
+        <mxCell id="f5" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;startSize=6;strokeColor=#6c8ebf;strokeWidth=2;" source="domain2" target="store2" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="f5-label" value="5a. persist metadata" style="edgeLabel;html=1;align=center;" parent="f5">
+          <mxGeometry x="0.5" y="-0.1" as="targetPoint"/>
+        </mxCell>
+        <mxCell id="f6" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;startSize=6;strokeColor=#6c8ebf;strokeWidth=2;" source="domain2" target="vault2" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="f6-label" value="5b. store evidence" style="edgeLabel;html=1;align=center;" parent="f6">
+          <mxGeometry x="0.5" y="-0.1" as="targetPoint"/>
+        </mxCell>
+        <mxCell id="vault-gate" value="TRUST BOUNDARY C6" style="shape=hexagon;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#999999;strokeWidth=3;" vertex="1" parent="1">
+          <mxGeometry x="740" y="170" width="50" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="f7" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;startSize=6;strokeColor=#6c8ebf;strokeWidth=2;" source="domain2" target="report2" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="f7-label" value="6. generate report" style="edgeLabel;html=1;align=center;" parent="f7">
+          <mxGeometry x="0.5" y="-0.1" as="targetPoint"/>
+        </mxCell>
+        <!-- AI flows (dashed) -->
+        <mxCell id="f8" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;startSize=6;strokeColor=#82b366;strokeWidth=2;dashed=1;dashPattern=5 5;" source="ai2" target="ui2" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="f8-label" value="7. AI assist (never authoritative)" style="edgeLabel;html=1;align=center;" parent="f8">
+          <mxGeometry x="0.5" y="-0.1" as="targetPoint"/>
+        </mxCell>
+        <!-- Updates flow -->
+        <mxCell id="f9" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;startSize=6;strokeColor=#82b366;strokeWidth=2;dashed=1;dashPattern=5 5;" source="upd2" target="domain2" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="f9-label" value="8. update check (signed)" style="edgeLabel;html=1;align=center;" parent="f9">
+          <mxGeometry x="0.5" y="-0.1" as="targetPoint"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

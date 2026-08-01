@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  C4 Container diagram (MVP Wave 2 baseline) for BlitzHub CRA Navigator.
+  Editable source: diagrams/01-c4-context.drawio
+  Format: draw.io XML (mxGraph)
+  License: MIT
+-->
+<mxfile host="github.com" modified="2026-07-31T17:00:00Z" agent="blitzhub-cra-solution-architect" version="26.0.0" etarget="svg">
+  <diagram name="C4 Container - CRA Navigator" id="c4-container">
+    <mxGraphModel dx="1324" dy="854" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fanning="0" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- ===== System Boundary: BlitzHub CRA Navigator (local desktop) ===== -->
+        <mxCell id="nav-boundary" value="BlitzHub CRA Navigator (Windows desktop)" style="gradientColor=#333333;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;dashed=0;labelBackgroundColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="860" height="680" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== Container: Application Shell (Electron) ===== -->
+        <mxCell id="shell" value="Application Shell&#xa;(Electron main + preload)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;verticalLabelPosition=bottom;" vertex="1" parent="1">
+          <mxGeometry x="80" y="80" width="260" height="120" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== Container: UI Renderer (Renderer process) ===== -->
+        <mxCell id="ui" value="UI Renderer&#xa;(Chromium/React)&#xa;[trust boundary: remote/user]" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="80" y="210" width="260" height="120" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== Container: Domain Engine (Node service in Electron) ===== -->
+        <mxCell id="domain" value="Domain Engine&#xa;(Node service / IPC)&#xa;[pure, no I/O side effects]" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="80" y="340" width="260" height="120" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== Container: Rules Engine ===== -->
+        <mxCell id="rules" value="Rules Engine&#xa;(deterministic CRA rules)&#xa;[source of truth: Issue #3/#4]" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="380" y="340" width="260" height="120" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== Container: Local Encrypted Store ===== -->
+        <mxCell id="store" value="Local Store&#xa;(SQLCipher + filesystem)&#xa;[at-rest encryption]" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="680" y="80" width="220" height="120" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== Container: Evidence Vault ===== -->
+        <mxCell id="vault" value="Evidence Vault&#xa;(sandboxed filesystem)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="680" y="210" width="220" height="120" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== Container: Report Generator ===== -->
+        <mxCell id="report" value="Report Generator&#xa;(static, deterministic)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="680" y="340" width="220" height="120" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== AI Assistant (external to trust boundary) ===== -->
+        <mxCell id="ai" value="AI Assistant&#xa;(optional, local LLM)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=2;dashed=1;dashPattern=5 5;" vertex="1" parent="1">
+          <mxGeometry x="480" y="480" width="200" height="100" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== Update Service (external to app boundary in MVP) ===== -->
+        <mxCell id="updates" value="Update Service&#xa;(GitHub Releases check)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;dashed=1;dashPattern=5 5;" vertex="1" parent="1">
+          <mxGeometry x="80" y="480" width="200" height="100" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== User (external actor) ===== -->
+        <mxCell id="user" value="SME / manufacturer" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="80" y="10" width="160" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== External Regulated Body (future cloud boundary) ===== -->
+        <mxCell id="regbody" value="Regulated body / market surveillance" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="680" y="480" width="220" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== Edges: relationships ===== -->
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=-1;" source="user" target="shell" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;startSize=6;" source="shell" target="ui" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2-label" value="IPC:trusted" style="edgeLabel;html=1;align=center;" parent="e2">
+          <mxGeometry x="0.5" y="-0.1" as="targetPoint"/>
+        </mxCell>
+
+        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;startSize=6;" source="ui" target="domain" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;startSize=6;" source="domain" target="rules" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;startSize=6;" source="domain" target="store" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;startSize=6;" source="domain" target="vault" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;startSize=6;" source="domain" target="report" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;startSize=6;dashed=1;dashPattern=5 5;" source="ai" target="domain" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;startSize=6;dashed=1;dashPattern=5 5;" source="updates" target="shell" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;startSize=6;dashed=1;dashPattern=5 5;" source="report" target="regbody" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

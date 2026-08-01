@@ -1,0 +1,94 @@
+schema_version: "1.0"
+epics:
+  - id: EPIC-001
+    title: Project Foundation
+    owner_agent: devops-repository-engineer
+    priority: critical
+    issues:
+      - id: BOOT-001
+        title: Executar bootstrap autónomo do projeto
+      - id: GOV-001
+        title: Validar manifestos e políticas de governação
+      - id: CI-001
+        title: Criar validação automática da estrutura de governação
+
+  - id: EPIC-002
+    title: Autonomous Product Factory
+    owner_agent: cra-product-orchestrator
+    priority: critical
+    issues:
+      - id: ORCH-001
+        title: Especificar máquina de estados do orquestrador
+      - id: ORCH-002
+        title: Definir sincronização GitHub e Kanban Hermes
+      - id: ORCH-003
+        title: Definir contrato de dispatch dos agentes
+
+  - id: EPIC-003
+    title: Regulatory Foundation
+    owner_agent: regulatory-research-engineer
+    priority: critical
+    issues:
+      - id: REG-001
+        title: Criar catálogo inicial de fontes oficiais CRA
+      - id: REG-002
+        title: Mapear obrigações e datas de aplicação do CRA
+      - id: REG-003
+        title: Criar esquema de validação de fontes
+
+  - id: EPIC-004
+    title: Product Definition
+    owner_agent: requirements-traceability-engineer
+    priority: critical
+    issues:
+      - id: PROD-001
+        title: Definir visão, destinatários e proposta de valor
+      - id: PROD-002
+        title: Definir âmbito e exclusões do MVP
+      - id: PROD-003
+        title: Definir modelo de resultados e limitações do relatório
+
+  - id: EPIC-005
+    title: Architecture Baseline
+    owner_agent: solution-architect
+    priority: critical
+    issues:
+      - id: ARCH-001
+        title: Definir arquitetura local-first do produto
+      - id: ARCH-002
+        title: Definir motor de regras e rastreabilidade
+      - id: ARCH-003
+        title: Definir armazenamento local de evidências e relatórios
+
+  - id: EPIC-006
+    title: UX and Design System
+    activation_wave: wave-2
+
+  - id: EPIC-007
+    title: CRA Scope Navigator
+    activation_wave: wave-2
+
+  - id: EPIC-008
+    title: Assessment and Evidence
+    activation_wave: wave-2
+
+  - id: EPIC-009
+    title: Reporting
+    activation_wave: wave-2
+
+  - id: EPIC-010
+    title: Desktop Delivery
+    activation_wave: wave-3
+
+  - id: EPIC-011
+    title: Quality and Security
+    activation_wave: wave-3
+
+  - id: EPIC-012
+    title: BlitzHub Website
+    activation_wave: wave-2
+
+  - id: EPIC-013
+    title: Supervisory Engineering
+    owner: chatgpt-supervisor
+    priority: critical

@@ -1,0 +1,41 @@
+{
+  "agents": [
+    {
+      "agent_id": "cra-product-orchestrator",
+      "canonical_source_path": "agents/souls/cra-product-orchestrator.SOUL.md",
+      "generic_signature_found": "false",
+      "soul_sha256_expected": "bb8d5a63f7480c6b3b65b444e544063b131f567e59227a4b007a759f1af97dcf",
+      "soul_specific": "True"
+    },
+    {
+      "agent_id": "devops-repository-engineer",
+      "canonical_source_path": "agents/souls/devops-repository-engineer.SOUL.md",
+      "generic_signature_found": "false",
+      "soul_sha256_expected": "09194eaf51de2079de51f049e32badb26fe154a4abb84801c01ea816c1f746cc",
+      "soul_specific": "True"
+    },
+    {
+      "agent_id": "regulatory-research-engineer",
+      "canonical_source_path": "agents/souls/regulatory-research-engineer.SOUL.md",
+      "generic_signature_found": "false",
+      "soul_sha256_expected": "87e13c6983f1cf67118860e78214212cfc6263e006fd7277ed16199b771fe918",
+      "soul_specific": "True"
+    },
+    {
+      "agent_id": "requirements-traceability-engineer",
+      "canonical_source_path": "agents/souls/requirements-traceability-engineer.SOUL.md",
+      "generic_signature_found": "false",
+      "soul_sha256_expected": "8f4c8fa70cc7399a74b272541704043298aa19bd7c46d59b276a7f17f365e057",
+      "soul_specific": "True"
+    },
+    {
+      "agent_id": "solution-architect",
+      "canonical_source_path": "agents/souls/solution-architect.SOUL.md",
+      "generic_signature_found": "false",
+      "soul_sha256_expected": "7a94c46eb070ceb5f2b2a6df916068d88559f601f72db5ecbc584a7a5673a347",
+      "soul_specific": "True"
+    }
+  ],
+  "description": "Canonical SOUL hash manifest for Issue #12",
+  "schema_version": "1.0"
+}

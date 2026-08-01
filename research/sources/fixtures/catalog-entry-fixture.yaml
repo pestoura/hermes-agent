@@ -1,0 +1,39 @@
+schema_version: "1.0"
+# ============================================================================
+# Validation Fixture — Sample Catalogue Entry
+# ============================================================================
+# This file provides a minimal valid catalogue entry for schema testing.
+# It is used by tests/test_source_catalog.py to verify schema compliance.
+# ============================================================================
+
+catalog:
+  - id: test-valid-entry
+    authority: "European Parliament and of the Council"
+    document_identifier: "Regulation (EU) 2024/2847"
+    celex: "32024R2847"
+    title: "Regulation (EU) 2024/2847 — Cyber Resilience Act"
+    short_title: "CRA Test Entry"
+    oj_reference: "OJ L, 2024/2847, 20.11.2024, p. 1-43"
+    article_or_section:
+      key_articles:
+        1: "Scope — products with digital elements"
+        7: "Essential cybersecurity requirements"
+        14: "Reporting obligations"
+    source_url: "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R2847"
+    eli_url: "https://eur-lex.europa.eu/eli/reg/2024/2847/oj/eng"
+    publication_or_version_date: "2024-12-09"
+    retrieved_at: "2026-07-31"
+    validation_date: "2026-07-31"
+    source_type: primary_regulation
+    validation_status: verified
+    jurisdiction: "European Union"
+    language: en
+    metadata_quality:
+      has_authority: true
+      has_document_identifier: true
+      has_article_or_section: true
+      has_canonical_url: true
+      has_publication_date: true
+      has_retrieval_date: true
+      has_source_type: true
+      has_validation_status: true

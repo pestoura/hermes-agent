@@ -1,0 +1,50 @@
+schema_version: "1.0"
+quality_gates:
+  universal:
+    - issue_traceability
+    - acceptance_criteria_covered
+    - tests_declared_and_executed
+    - documentation_updated
+    - evidence_attached
+    - no_secrets_detected
+    - supervisory_review_complete
+
+  code:
+    - formatting
+    - lint
+    - type_check
+    - unit_tests
+    - integration_tests_when_applicable
+    - dependency_review
+    - secret_scanning
+
+  regulatory:
+    - official_primary_source
+    - article_or_annex_reference
+    - retrieval_date
+    - interpretation_separated_from_fact
+    - source_validation_status
+    - traceability_to_requirement
+
+  visual:
+    - asset_manifest_present
+    - provenance_present
+    - preview_present
+    - accessibility_text_present
+    - light_and_dark_mode_checked
+    - reduced_motion_supported
+    - file_size_within_policy
+
+  release:
+    - all_required_checks_passed
+    - no_critical_or_high_required_findings
+    - release_notes_present
+    - sbom_generated
+    - artifacts_checksummed
+    - rollback_documented
+
+merge_policy:
+  allowed_when:
+    - all_applicable_gates_pass
+    - no_required_supervisory_findings_open
+  automatic_merge_eligible: true

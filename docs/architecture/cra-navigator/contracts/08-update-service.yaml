@@ -1,0 +1,59 @@
+schema_version: "1.0"
+contract_id: blitzhub-cra-update-service
+namespace: com.blitzhub.cra.updates
+stability: stable
+owner: desktop-packaging-engineer
+
+description: >
+  Interface do Update Service (Zona D). Verifica e aplica updates assinados.
+  Nunca aplica sem verificação de assinatura + hash.
+
+interface:
+  UpdateService:
+    check:
+      returns: "Promise<UpdateInfo|null>"
+      fields:
+        version: string
+        releaseNotes: string
+        assetUrl: string
+        sha256: string
+        signature: string
+        publishedAt: date-time
+    verify:
+      input:
+        assetPath: string
+      returns: "boolean"
+      checks:
+        - "sha256(asset) == release.sha256"
+        - "ed25519_verify(signature, asset, embedded_public_key)"
+    download:
+      input:
+        updateInfo: "UpdateInfo"
+        dest: "string (temp dir only)"
+      returns: "Promise<string> (temp path)"
+    apply:
+      input:
+        tempAssetPath: string
+      returns: "Promise<void>"
+      guarantees:
+        - "verify run again before write"
+        - "rollback on failure"
+
+embedded_trusted_root:
+  algorithm: "ed25519"
+  public_key: "bundled at build time (trusted root)"
+  rotation: "via app update only"
+
+update_types:
+  - app_full_update: { ext: ".exe|.msi", signed: true }
+  - app_delta_update: { ext: ".mar", signed: true }
+  - rule_package: { ext: ".zip", signed: true, separate_manifest: true }
+
+opt_in_model:
+  mvp: "user must confirm download + apply"
+  future_security_auto: "disabled by default; requires explicit user opt-in to install security patches"
+
+verification_path:
+  tests:
+    - update_rejected_without_signature
+    - update_uses_temp_only

@@ -1,0 +1,58 @@
+schema_version: "1.0"
+contract_id: blitzhub-cra-shell-api
+namespace: com.blitzhub.cra.shell
+stability: stable
+owner: desktop-packaging-engineer
+
+description: >
+  Interface do Application Shell (Electron main process) para o UI Renderer.
+  Este é o boundary privilegiado entre a UI e o OS. Apenas operações seguras e validadas
+  são expostas; nenhuma lógica de domínio vive aqui.
+
+interface:
+  ShellAPI:
+    openEvidenceFilePicker:
+      returns: "Promise<string|null>  # sanitized path within vault, never raw OS path"
+    checkForUpdates:
+      returns: "Promise<UpdateInfo|null>"
+      guarantees:
+        - "downloads to temp/ only"
+        - "signature verified before return (not applied)"
+    applyUpdate:
+      input:
+        path: "string (temp path)"
+      returns: "Promise<void>"
+      guarantees:
+        - "verifies signature + hash again at apply time"
+        - "graceful restart; rollback after 2 failed boots"
+    exportReport:
+      input:
+        scopeId: "string"
+      returns: "Promise<BlobUrl>"
+    exportDiagnostics:
+      returns: "Promise<ZipPath>"
+      guarantees:
+        - "logs + manifest + rule package meta only"
+        - "NO master key, NO evidence binaries, NO PII"
+    getSecurityInfo:
+      returns: "Promise<SecurityInfo>"
+      fields:
+        - "privilegeLevel: standard | elevated"
+        - "dataFolderAcl: per-user"
+        - "codeSigned: boolean"
+
+process_model:
+  main_process: "Electron main (Node) — owns ShellAPI, IPC gate"
+  renderer_process: "Chromium (sandboxed, nodeIntegration=false, contextIsolation=true)"
+  domain_process: "Node service (IPC) — owns Domain Engine"
+  ipc_channel: "contextBridge-exposeInMainWorld, validated"
+
+trust_boundary:
+  - "Renderer runs in TZ-C (untrusted)"
+  - "Only ShellAPI surface exposed to renderer (deny-by-default)"
+  - "File I/O only via Evidence Vault (sanitized paths)"
+  - "No env vars with secrets exposed to renderer"
+
+verification_path:
+  - privilege_boundary_smoke_test
+  - shell_api_surface_minimal

@@ -1,0 +1,15 @@
+{
+  "agent_id": "devops-repository",
+  "runtime_name": "blitzhub-cra-devops-repository",
+  "runtime_id": "runtime-blitzhub-cra-devops-repository-20260731T163221Z",
+  "status": "healthy",
+  "timestamp": "2026-07-31T15:32:22Z",
+  "checks": {
+    "repository_read": true,
+    "issue_read": true,
+    "board_read": true,
+    "own_card_update": true,
+    "branch_creation_capability": true,
+    "pull_request_capability": true
+  }
+}

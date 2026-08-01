@@ -1,0 +1,26 @@
+{
+  "blocker": "kanban_dispatch_cap_reached",
+  "board": "blitzhub-cra-navigator",
+  "runtime_commit": "2796fca8c93f10b76642c65a80a3a5ed40a50eb8",
+  "config_kanban_max_in_progress": 3,
+  "attempted_dispatch_markers": {
+    "t_005a528d": "[sppm-dispatch-approved]",
+    "t_905d1aff": "[sppm-dispatch-approved]",
+    "t_8a87aa2d": "[sppm-dispatch-approved]",
+    "t_63a53028": "[sppm-dispatch-approved]"
+  },
+  "observed_spawned": [
+    {"task":"t_005a528d","assignee":"blitzhub-cra-regulatory-research","status":"running"},
+    {"task":"t_905d1aff","assignee":"blitzhub-cra-solution-architect","status":"running"},
+    {"task":"t_8a87aa2d","assignee":"blitzhub-cra-devops-repository","status":"running"}
+  ],
+  "orchestrator_blocked": {
+    "task":"t_63a53028",
+    "assignee":"blitzhub-cra-product-orchestrator",
+    "status":"ready",
+    "reason":"no dispatch slot released by running-task completion or cap increase"
+  },
+  "issue_4_status": "todo",
+  "issue_4_assignee": "blitzhub-cra-requirements-traceability",
+  "issue_4_blocked_by_issue_3": true
+}

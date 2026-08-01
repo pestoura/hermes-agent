@@ -1,0 +1,60 @@
+schema_version: "1.0"
+management:
+  supervisor: chatgpt
+  executor: product_orchestrator
+  review_each_supervisory_run: true
+
+waves:
+  - id: wave-1
+    name: Foundation
+    status: active
+    agents:
+      - cra-product-orchestrator
+      - regulatory-research-engineer
+      - requirements-traceability-engineer
+      - solution-architect
+      - devops-repository-engineer
+    completion_criteria:
+      - bootstrap_complete
+      - orchestrator_contract_defined
+      - repository_validation_green
+      - regulatory_source_catalog_created
+      - requirements_schema_created
+      - architecture_baseline_created
+
+  - id: wave-2
+    name: Product implementation
+    status: pending
+    agents:
+      - ux-design-systems-engineer
+      - frontend-engineer
+      - backend-domain-engineer
+      - rules-reporting-engineer
+      - technical-documentation-engineer
+    activation_criteria:
+      - wave-1-complete
+      - product_scope_baselined
+      - architecture_contracts_available
+      - initial_regulatory_sources_validated
+
+  - id: wave-3
+    name: Assurance and delivery
+    status: pending
+    agents:
+      - quality-engineering-agent
+      - application-security-engineer
+      - desktop-packaging-engineer
+      - release-engineer
+    activation_criteria:
+      - functional_product_baseline_exists
+      - first_end_to_end_flow_exists
+      - automated_test_foundation_exists
+      - packaging_architecture_defined
+
+activation_rules:
+  partial_activation_allowed: true
+  override_requires:
+    - supervisor_reason
+    - affected_dependencies
+    - rollback_condition
+    - repository_record

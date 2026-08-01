@@ -1,0 +1,55 @@
+schema_version: "1.0"
+contract_id: blitzhub-cra-crypto-key-provider
+namespace: com.blitzhub.cra.crypto
+stability: stable
+owner: backend-domain-engineer
+
+description: >
+  Interface do provedor de chaves. Implementação de referência: Windows DPAPI.
+  A chave-mestra nunca é persistida em texto. Este é o boundary que protege TZ-B.
+
+interface:
+  CryptoKeyProvider:
+    generateMasterKey:
+      returns: "Uint8Array (32 bytes)"
+      description: "Gera um master key aleatório criptograficamente seguro, uma vez."
+      side_effects: none
+      persistence: "wrapped by os_protect before storage"
+    protect:
+      input:
+        key: "Uint8Array"
+        description: "raw key material to protect"
+      returns: "Uint8Array (protected blob)"
+      description: "O Windows DPAPI (CryptProtectData) envolve a chave; ligação ao user logado."
+      os_binding: "Windows DPAPI (per-user, per-machine)"
+    unprotect:
+      input:
+        blob: "Uint8Array (protected blob)"
+      returns: "Uint8Array | null"
+      description: "Desprotege; falha se utilizador/DPAPI mudar (não vaza)."
+      on_failure: "throw ProtectedKeyUnusableError"
+
+key_derivation:
+  sqlcipher_key:
+    algorithm: "PBKDF2-HMAC-SHA256"
+    iterations: 200000
+    salt_source: "random, stored in store header"
+    length: 256
+    input: "masterKey (32 bytes) + salt"
+  backup_export_key:
+    algorithm: "PBKDF2-HMAC-SHA256"
+    iterations: 200000
+    input: "masterKey + user_password"
+    purpose: "exportação offline de backup"
+    default: off
+
+storage_layout:
+  master_key_wrapper:
+    path: "%LOCALAPPDATA%/BlitzHub/CRANavigator/keys/master.key"
+    format: "DPAPI blob (CryptUnprotectData)"
+    acl: "per-user Windows"
+  note: "Nenhuma chave em texto plano no disk; nem no store, nem no process.env."
+
+reversibility:
+  - "Interface é plugin: pode trocar para TPM-backed ou cloud KMS sem tocar TZ-A/B."
+  - "ADR-005 v2 considera TPM para v2."

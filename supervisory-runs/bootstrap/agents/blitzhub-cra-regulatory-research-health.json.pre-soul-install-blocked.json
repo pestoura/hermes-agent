@@ -1,0 +1,9 @@
+{
+  "agent_id": "blitzhub-cra-regulatory-research",
+  "overall_status": "blocked",
+  "soul_sha256_match": false,
+  "role_specific_soul_present": false,
+  "generic_soul_signature_found": true,
+  "soul_runtime_readback": "failed",
+  "blocking_reason": "generic Hermes SOUL detected before BOOT-005 sync"
+}

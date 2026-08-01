@@ -1,0 +1,416 @@
+schema_version: '1.0'
+entries:
+- entry_id: cra-regulation-2024-2847
+  classification: verified_directly
+  official_source_checked: true
+  source_url: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R2847
+  checked_at: '2026-08-01'
+  evidence_reference: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R2847
+  metadata_verified:
+    authority: true
+    title: true
+    identifier: true
+    publication_date: true
+    oj_reference: true
+    article_mapping: true
+  reason: Primary regulation with CELEX 32024R2847, OJ citation and ELI confirmed
+    in catalog entry.
+  source_role: legal_act
+  oj_reference: OJ L, 2024/2847, 20.11.2024, p. 1-43
+  article_mapping: true
+  stale_reason: null
+  stale_since: null
+  superseded_by: null
+- entry_id: delegated-regulation-2025-1535
+  classification: verified_directly
+  official_source_checked: true
+  source_url: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32025R1535
+  checked_at: '2026-08-01'
+  evidence_reference: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32025R1535
+  metadata_verified:
+    authority: true
+    title: true
+    identifier: true
+    publication_date: true
+    oj_reference: true
+    article_mapping: true
+  reason: Delegated act CELEX 32025R1535 with complete OJ metadata present.
+  source_role: legal_act
+  oj_reference: OJ L, 2025/1535, 29.10.2025
+  article_mapping: true
+  stale_reason: null
+  stale_since: null
+  superseded_by: null
+- entry_id: implementing-regulation-2025-2392
+  classification: verified_directly
+  official_source_checked: true
+  source_url: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32025R2392
+  checked_at: '2026-08-01'
+  evidence_reference: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32025R2392
+  metadata_verified:
+    authority: true
+    title: true
+    identifier: true
+    publication_date: true
+    oj_reference: true
+    article_mapping: true
+  reason: Implementing act CELEX 32025R2392 with publication date 2025-12-01 and OJ
+    reference confirmed.
+  source_role: legal_act
+  oj_reference: OJ L, 2025/2392, 1.12.2025, p. 1-10
+  article_mapping: true
+  stale_reason: null
+  stale_since: null
+  superseded_by: null
+- entry_id: cybersecurity-act-2019-881
+  classification: verified_directly
+  official_source_checked: true
+  source_url: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32019R0881
+  checked_at: '2026-08-01'
+  evidence_reference: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32019R0881
+  metadata_verified:
+    authority: true
+    title: true
+    identifier: true
+    publication_date: true
+    oj_reference: true
+    article_mapping: true
+  reason: Related legislation CELEX 32019R0881 with official OJ reference and ELI
+    present.
+  source_role: legal_act
+  oj_reference: OJ L 151, 7.6.2019, p. 15-69
+  article_mapping: true
+  stale_reason: null
+  stale_since: null
+  superseded_by: null
+- entry_id: market-surveillance-reg-2019-1020
+  classification: verified_directly
+  official_source_checked: true
+  source_url: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32019R1020
+  checked_at: '2026-08-01'
+  evidence_reference: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32019R1020
+  metadata_verified:
+    authority: true
+    title: true
+    identifier: true
+    publication_date: true
+    oj_reference: true
+    article_mapping: true
+  reason: Related legislation CELEX 32019R1020 with OJ citation and ELI confirmed.
+  source_role: legal_act
+  oj_reference: OJ L 169, 25.6.2019, p. 1-44
+  article_mapping: true
+  stale_reason: null
+  stale_since: null
+  superseded_by: null
+- entry_id: nis2-directive-2022-2555
+  classification: verified_directly
+  official_source_checked: true
+  source_url: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32022L2555
+  checked_at: '2026-08-01'
+  evidence_reference: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32022L2555
+  metadata_verified:
+    authority: true
+    title: true
+    identifier: true
+    publication_date: true
+    oj_reference: true
+    article_mapping: true
+  reason: Directive CELEX 32022L2555 with OJ L 333, 27.12.2022 confirmed for SUP-20260731-001.
+  source_role: legal_act
+  oj_reference: OJ L 333, 27.12.2022, p. 80-152
+  article_mapping: true
+  stale_reason: null
+  stale_since: null
+  superseded_by: null
+- entry_id: commission-guidance-cra-2026-5252
+  classification: pending_review
+  official_source_checked: true
+  source_url: https://digital-strategy.ec.europa.eu/en/library/commission-publishes-new-guidance-support-timely-cyber-resilience-act-implementation
+  checked_at: '2026-08-01'
+  evidence_reference: https://digital-strategy.ec.europa.eu/en/library/commission-publishes-new-guidance-support-timely-cyber-resilience-act-implementation
+  metadata_verified:
+    authority: true
+    title: true
+    identifier: true
+    publication_date: true
+    oj_reference: null
+    article_mapping: null
+  reason: Official Commission guidance published 2026-07-27 with document identifier
+    C(2026) 5252 final; metadata verified including publication evidence.
+  source_role: official_guidance
+  oj_reference: null
+  article_mapping: null
+  stale_reason: null
+  stale_since: null
+  superseded_by: null
+- entry_id: ec-faqs-cra-2025
+  classification: pending_review
+  official_source_checked: true
+  source_url: https://ec.europa.eu/newsroom/dae/redirection/document/122331
+  checked_at: '2026-08-01'
+  evidence_reference: https://ec.europa.eu/newsroom/dae/redirection/document/122331
+  metadata_verified:
+    authority: true
+    title: true
+    identifier: true
+    publication_date: true
+    oj_reference: null
+    article_mapping: null
+  reason: Official EC FAQs version 1.3 with direct source URL and publication date
+    confirmed; metadata verified including publication evidence.
+  source_role: official_guidance
+  oj_reference: null
+  article_mapping: null
+  stale_reason: null
+  stale_since: null
+  superseded_by: null
+- entry_id: ec-cra-factpage-implementation
+  classification: pending_review
+  official_source_checked: true
+  source_url: https://digital-strategy.ec.europa.eu/en/factpages/cyber-resilience-act-implementation
+  checked_at: '2026-08-01'
+  evidence_reference: https://digital-strategy.ec.europa.eu/en/factpages/cyber-resilience-act-implementation
+  metadata_verified:
+    authority: true
+    title: true
+    identifier: true
+    publication_date: true
+    oj_reference: null
+    article_mapping: null
+  reason: Official EC fact page present, but content may change; requires periodic
+    revalidation.
+  source_role: official_guidance
+  oj_reference: null
+  article_mapping: null
+  stale_reason: null
+  stale_since: null
+  superseded_by: null
+- entry_id: ec-cra-summary
+  classification: pending_review
+  official_source_checked: true
+  source_url: https://digital-strategy.ec.europa.eu/en/policies/cra-summary
+  checked_at: '2026-08-01'
+  evidence_reference: https://digital-strategy.ec.europa.eu/en/policies/cra-summary
+  metadata_verified:
+    authority: true
+    title: true
+    identifier: true
+    publication_date: true
+    oj_reference: null
+    article_mapping: null
+  reason: Commission-prepared summary explicitly states it is not an official interpretation;
+    requires review against live text.
+  source_role: official_guidance
+  oj_reference: null
+  article_mapping: null
+  stale_reason: null
+  stale_since: null
+  superseded_by: null
+- entry_id: ec-cra-policy-page
+  classification: pending_review
+  official_source_checked: true
+  source_url: https://digital-strategy.ec.europa.eu/en/policies/cyber-resilience-act
+  checked_at: '2026-08-01'
+  evidence_reference: https://digital-strategy.ec.europa.eu/en/policies/cyber-resilience-act
+  metadata_verified:
+    authority: true
+    title: true
+    identifier: true
+    publication_date: true
+    oj_reference: null
+    article_mapping: null
+  reason: Official policy landing page confirmed; needs periodic revalidation due
+    to dynamic updates.
+  source_role: official_guidance
+  oj_reference: null
+  article_mapping: null
+  stale_reason: null
+  stale_since: null
+  superseded_by: null
+- entry_id: eu-cybersecurity-strategy-2020
+  classification: pending_review
+  official_source_checked: true
+  source_url: https://digital-strategy.ec.europa.eu/en/policies/cybersecurity-strategy
+  checked_at: '2026-08-01'
+  evidence_reference: https://digital-strategy.ec.europa.eu/en/policies/cybersecurity-strategy
+  metadata_verified:
+    authority: true
+    title: true
+    identifier: true
+    publication_date: true
+    oj_reference: false
+    article_mapping: null
+  reason: Policy context document dated 2020-12-16; no direct CRA regulatory mapping
+    and may be superseded.
+  source_role: context
+  oj_reference: null
+  article_mapping: null
+  stale_reason: null
+  stale_since: null
+  superseded_by: null
+- entry_id: enisa-authority-home
+  classification: pending_review
+  official_source_checked: true
+  source_url: https://www.enisa.europa.eu/
+  checked_at: '2026-08-01'
+  evidence_reference: https://www.enisa.europa.eu/
+  metadata_verified:
+    authority: true
+    title: true
+    identifier: true
+    publication_date: true
+    oj_reference: null
+    article_mapping: null
+  reason: Authority homepage is not a stable regulatory source; content changes without
+    versioning.
+  source_role: context
+  oj_reference: null
+  article_mapping: null
+  stale_reason: null
+  stale_since: null
+  superseded_by: null
+- entry_id: enisa-srp-page
+  classification: pending_review
+  official_source_checked: true
+  source_url: https://www.enisa.europa.eu/topics/product-security-and-certification/single-reporting-platform-srp
+  checked_at: '2026-08-01'
+  evidence_reference: https://www.enisa.europa.eu/topics/product-security-and-certification/single-reporting-platform-srp
+  metadata_verified:
+    authority: true
+    title: true
+    identifier: true
+    publication_date: true
+    oj_reference: null
+    article_mapping: null
+  reason: ENISA SRP overview page references Articles 14 and 15; interpretation note
+    present; requires regulatory review before final classification.
+  source_role: official_tool
+  oj_reference: null
+  article_mapping: null
+  stale_reason: null
+  stale_since: null
+  superseded_by: null
+- entry_id: enisa-srp-notification
+  classification: pending_review
+  official_source_checked: true
+  source_url: https://www.enisa.europa.eu/cra-srp-ar-notification-submission-and-update
+  checked_at: '2026-08-01'
+  evidence_reference: https://www.enisa.europa.eu/cra-srp-ar-notification-submission-and-update
+  metadata_verified:
+    authority: true
+    title: true
+    identifier: true
+    publication_date: true
+    oj_reference: null
+    article_mapping: null
+  reason: Operational tool page without stable legal metadata; workflow content may
+    change.
+  source_role: official_tool
+  oj_reference: null
+  article_mapping: null
+  stale_reason: null
+  stale_since: null
+  superseded_by: null
+- entry_id: enisa-srp-user-registration
+  classification: pending_review
+  official_source_checked: true
+  source_url: https://www.enisa.europa.eu/cra-srp-ar-user-registration
+  checked_at: '2026-08-01'
+  evidence_reference: https://www.enisa.europa.eu/cra-srp-ar-user-registration
+  metadata_verified:
+    authority: true
+    title: true
+    identifier: true
+    publication_date: true
+    oj_reference: null
+    article_mapping: null
+  reason: User registration page is operational and not a stable regulatory source.
+  source_role: official_tool
+  oj_reference: null
+  article_mapping: null
+  stale_reason: null
+  stale_since: null
+  superseded_by: null
+- entry_id: enisa-sme-cra-survey-2026
+  classification: pending_review
+  official_source_checked: true
+  source_url: https://www.enisa.europa.eu/publications/sme-cra-survey-report
+  checked_at: '2026-08-01'
+  evidence_reference: https://www.enisa.europa.eu/publications/sme-cra-survey-report
+  metadata_verified:
+    authority: true
+    title: true
+    identifier: true
+    publication_date: true
+    oj_reference: null
+    article_mapping: null
+  reason: Survey report dated 2026-06-24 is not a regulatory source; content is context-only.
+  source_role: context
+  oj_reference: null
+  article_mapping: null
+  stale_reason: null
+  stale_since: null
+  superseded_by: null
+- entry_id: enisa-technical-competence-cra-notified-bodies-2026
+  classification: pending_review
+  official_source_checked: true
+  source_url: https://www.enisa.europa.eu/publications/technical-competence-requirements-for-cra-notified-bodies
+  checked_at: '2026-08-01'
+  evidence_reference: https://www.enisa.europa.eu/publications/technical-competence-requirements-for-cra-notified-bodies
+  metadata_verified:
+    authority: true
+    title: true
+    identifier: true
+    publication_date: true
+    oj_reference: null
+    article_mapping: null
+  reason: ENISA competence guidance dated 2026-06-04; not a legal act and not a direct
+    regulatory source.
+  source_role: official_guidance
+  oj_reference: null
+  article_mapping: null
+  stale_reason: null
+  stale_since: null
+  superseded_by: null
+- entry_id: enisa-sme-cyber-resilience-maturity-2026
+  classification: pending_review
+  official_source_checked: true
+  source_url: https://www.enisa.europa.eu/publications/sme-cyber-resilience-maturity-assessment-model
+  checked_at: '2026-08-01'
+  evidence_reference: https://www.enisa.europa.eu/publications/sme-cyber-resilience-maturity-assessment-model
+  metadata_verified:
+    authority: true
+    title: true
+    identifier: true
+    publication_date: true
+    oj_reference: null
+    article_mapping: null
+  reason: Maturity assessment model is implementation guidance, not a regulatory source.
+  source_role: context
+  oj_reference: null
+  article_mapping: null
+  stale_reason: null
+  stale_since: null
+  superseded_by: null
+- entry_id: enisa-secure-by-design-playbook-2026
+  classification: pending_review
+  official_source_checked: true
+  source_url: https://www.enisa.europa.eu/publications/enisa-secure-by-design-and-default-playbook
+  checked_at: '2026-08-01'
+  evidence_reference: https://www.enisa.europa.eu/publications/enisa-secure-by-design-and-default-playbook
+  metadata_verified:
+    authority: true
+    title: true
+    identifier: true
+    publication_date: true
+    oj_reference: null
+    article_mapping: null
+  reason: Playbook dated 2026-07-30 is guidance material; not a stable regulatory
+    source.
+  source_role: official_guidance
+  oj_reference: null
+  article_mapping: null
+  stale_reason: null
+  stale_since: null
+  superseded_by: null

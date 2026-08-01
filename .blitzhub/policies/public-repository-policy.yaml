@@ -1,0 +1,44 @@
+schema_version: "1.0"
+public_repository_policy:
+  repository_visibility: public
+
+  allowed:
+    - source_code
+    - tests
+    - documentation
+    - architecture
+    - requirements
+    - official_source_metadata
+    - synthetic_evidence
+    - generated_visual_assets
+    - agent_definitions
+    - orchestration_manifests
+    - supervisory_reports
+
+  forbidden:
+    - credentials
+    - api_tokens
+    - private_keys
+    - production_secrets
+    - customer_data
+    - real_customer_evidence
+    - internal_network_details
+    - undisclosed_security_findings
+    - proprietary_material_without_public_redistribution_rights
+
+  publication_guards:
+    - secret_scan
+    - personal_data_scan
+    - internal_endpoint_scan
+    - license_check
+    - vulnerability_disclosure_check
+
+  security_findings:
+    public_issue_allowed: false
+    private_security_advisory_preferred: true
+
+  github_actions:
+    default_permissions: read
+    fork_secrets: false
+    fork_write_token: false
+    privileged_workflows_require_trusted_ref: true

@@ -1,0 +1,151 @@
+schema_version: "1.1"
+provisioning_manifest: agents/provisioning.yaml
+common_contract: agents/contracts/common-engineering-contract.yaml
+
+agent_policy:
+  runtime_agents_must_be_native_and_persistent: true
+  repository_files_alone_do_not_count_as_created_agents: true
+  create_or_reconcile_by_idempotency_key: true
+  verify_runtime_objects_after_creation: true
+  only_active_wave_agents_may_receive_work: true
+  chatgpt_controls_wave_activation_decisions: true
+  orchestrator_materializes_authorized_wave_changes: true
+
+agents:
+  - id: cra-product-orchestrator
+    runtime_name: blitzhub-cra-product-orchestrator
+    wave: wave-1
+    status: active
+    definition: agents/definitions/cra-product-orchestrator.yaml
+    prompt: agents/prompts/cra-product-orchestrator.md
+    purpose: Controlar estados, dependências, sincronização e distribuição de trabalho.
+    may_interpret_domain_content: false
+    initial_issue: 7
+    outputs:
+      - kanban_updates
+      - dispatch_decisions
+      - reconciliation_reports
+
+  - id: regulatory-research-engineer
+    runtime_name: blitzhub-cra-regulatory-research
+    wave: wave-1
+    status: active
+    definition: agents/definitions/regulatory-research-engineer.yaml
+    prompt: agents/prompts/regulatory-research-engineer.md
+    purpose: Pesquisar fontes oficiais do CRA e produzir conhecimento rastreável.
+    initial_issue: 3
+    outputs:
+      - source_catalog
+      - regulatory_notes
+      - source_validation
+
+  - id: requirements-traceability-engineer
+    runtime_name: blitzhub-cra-requirements-traceability
+    wave: wave-1
+    status: active_dependency_gated
+    definition: agents/definitions/requirements-traceability-engineer.yaml
+    prompt: agents/prompts/requirements-traceability-engineer.md
+    purpose: Converter objetivos e fontes em requisitos, critérios e rastreabilidade.
+    initial_issue: 4
+    dispatch_guard:
+      - issue_3_completed
+      - source_catalog_accepted
+    outputs:
+      - requirements
+      - acceptance_criteria
+      - traceability_matrix
+
+  - id: solution-architect
+    runtime_name: blitzhub-cra-solution-architect
+    wave: wave-1
+    status: active
+    definition: agents/definitions/solution-architect.yaml
+    prompt: agents/prompts/solution-architect.md
+    purpose: Definir arquitetura, limites, contratos e decisões técnicas.
+    initial_issue: 5
+    outputs:
+      - architecture_baseline
+      - adr_records
+      - component_contracts
+
+  - id: devops-repository-engineer
+    runtime_name: blitzhub-cra-devops-repository
+    wave: wave-1
+    status: active
+    definition: agents/definitions/devops-repository-engineer.yaml
+    prompt: agents/prompts/devops-repository-engineer.md
+    purpose: Preparar repositório, workflows, validações e estrutura de entrega.
+    initial_issue: 6
+    outputs:
+      - repository_structure
+      - github_workflows
+      - validation_tooling
+
+  - id: ux-design-systems-engineer
+    wave: wave-2
+    status: pending
+    purpose: Definir experiência, fluxos e o design system BlitzHub.
+
+  - id: frontend-engineer
+    wave: wave-2
+    status: pending
+    purpose: Implementar interfaces do website e da aplicação.
+
+  - id: backend-domain-engineer
+    wave: wave-2
+    status: pending
+    purpose: Implementar domínio, persistência, APIs e processamento local.
+
+  - id: rules-reporting-engineer
+    wave: wave-2
+    status: pending
+    purpose: Implementar motor de regras determinístico e geração documental.
+
+  - id: technical-documentation-engineer
+    wave: wave-2
+    status: pending
+    purpose: Manter documentação técnica, funcional e operacional.
+
+  - id: quality-engineering-agent
+    wave: wave-3
+    status: pending
+    purpose: Criar e executar estratégia de testes e regressão.
+
+  - id: application-security-engineer
+    wave: wave-3
+    status: pending
+    purpose: Rever arquitetura, código, dependências e cadeia de fornecimento.
+
+  - id: desktop-packaging-engineer
+    wave: wave-3
+    status: pending
+    purpose: Produzir instalador, atualização, backup e distribuição desktop.
+
+  - id: release-engineer
+    wave: wave-3
+    status: pending
+    purpose: Controlar versões, artefactos, gates e publicação.
+
+external_roles:
+  chatgpt-supervisor:
+    type: external_supervisor
+    status: active_permanent
+    wave: external
+    wave_member: false
+    dispatchable: false
+    kanban_assignable: false
+    manifest: .blitzhub/supervisory/chatgpt-supervisor.yaml
+    directive: .blitzhub/supervisory/supervisory-directive.md
+    scheduler_prompt: .blitzhub/supervisory/chatgpt-scheduler-prompt.md
+    purpose: Supervisionar, desafiar, ensinar, corrigir e melhorar continuamente engenharia, produto, UX, regulamentação, segurança, negócio, aquisição e inovação.
+    may_create_issues: true
+    may_create_corrective_pull_requests: true
+    may_update_agent_waves: true
+    may_dispatch_runtime_agents: false
+    may_write_directly_to_main: false
+    supervised_by: human_project_owner
+
+  visual-assets-motion-engineer:
+    wave: external
+    authority: chatgpt-supervisor
+    purpose: Produzir e validar imagens, ícones personalizados e animações.

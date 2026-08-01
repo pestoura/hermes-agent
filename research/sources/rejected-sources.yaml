@@ -1,0 +1,18 @@
+schema_version: '1.0'
+rejected_sources:
+- entry_id: enisa-technical-implementation-guidance-nis2-2024-2690
+  classification: rejected
+  official_source_checked: true
+  source_url: https://www.enisa.europa.eu/sites/default/files/2025-06/ENISA_Technical_implementation_guidance_on_cybersecurity_risk_management_measures_version_1.0.pdf
+  checked_at: '2026-08-01'
+  evidence_reference: https://www.enisa.europa.eu/sites/default/files/2025-06/ENISA_Technical_implementation_guidance_on_cybersecurity_risk_management_measures_version_1.0.pdf
+  metadata_verified:
+    authority: true
+    title: true
+    identifier: true
+    publication_date: true
+    oj_reference: null
+    article_mapping: null
+  source_role: context
+  reason: NIS2 guidance document is outside CRA scope and should not be included in
+    the CRA source catalogue.

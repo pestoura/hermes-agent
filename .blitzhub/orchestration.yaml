@@ -1,0 +1,106 @@
+schema_version: "1.1"
+orchestrator:
+  id: cra-product-orchestrator
+  runtime_name: blitzhub-cra-product-orchestrator
+  runtime_object_required: true
+  definition: agents/definitions/cra-product-orchestrator.yaml
+  prompt: agents/prompts/cra-product-orchestrator.md
+  source_of_truth: github
+  operational_view: hermes_kanban
+  board: blitzhub-cra-navigator
+  reconciliation_interval: each_cycle
+  control_received_from: default
+
+bootstrap_handoff:
+  from_runtime_agent: default
+  to_runtime_agent: blitzhub-cra-product-orchestrator
+  requires:
+    - runtime_board_verified
+    - all_wave_1_agents_healthy
+    - initial_cards_materialized
+    - minimum_three_non_bootstrap_tasks_in_progress
+  acknowledgement_required: true
+  default_agent_must_stop_orchestration_after_handoff: true
+
+reads:
+  - issues
+  - pull_requests
+  - review_comments
+  - issue_comments
+  - commits
+  - checks
+  - agent_runtime_health
+  - agent_wave_state
+  - supervisory_results
+
+responsibilities:
+  - normalize_project_state
+  - synchronize_github_and_kanban
+  - validate_dependencies
+  - create_or_update_kanban_tasks_for_existing_github_issues
+  - dispatch_ready_work
+  - enforce_agent_wave_status
+  - enforce_agent_health_before_dispatch
+  - apply_state_transitions
+  - prevent_duplicate_work
+  - prioritize_required_supervisory_findings
+  - publish_reconciliation_report
+
+non_responsibilities:
+  - deep_regulatory_interpretation
+  - deep_code_review
+  - implementation_of_product_features
+  - product_design_decisions
+  - visual_asset_generation
+  - unilateral_agent_wave_activation
+
+initial_dispatch:
+  - issue: 3
+    agent: regulatory-research-engineer
+    state: in_progress
+  - issue: 4
+    agent: requirements-traceability-engineer
+    state: backlog
+    blocked_by: [3]
+  - issue: 5
+    agent: solution-architect
+    state: in_progress
+  - issue: 6
+    agent: devops-repository-engineer
+    state: in_progress
+  - issue: 7
+    agent: cra-product-orchestrator
+    state: in_progress
+  - issue: 8
+    agent: chatgpt-supervisor
+    state: supervisory_review
+    executor: external
+
+work_item_flow:
+  - inbox
+  - backlog
+  - ready
+  - in_progress
+  - pull_request
+  - supervisory_review
+  - rework
+  - ready_to_merge
+  - done
+
+supervisory_result_mapping:
+  ACCEPTED: ready_to_merge
+  READY_TO_MERGE: ready_to_merge
+  REPAIR_REQUIRED: rework
+  IMPROVEMENT_REQUIRED: backlog
+  SOURCE_INVALID: rework
+  SECURITY_FINDING: rework
+  DOCUMENTATION_INCOMPLETE: rework
+  BLOCKED: blocked
+  DEFERRED: deferred
+
+conflict_policy:
+  hermes_branch_prefix: hermes/
+  chatgpt_branch_prefix: chatgpt/
+  orchestrator_branch_prefix: orchestrator/
+  direct_main_writes: forbidden
+  force_push: forbidden

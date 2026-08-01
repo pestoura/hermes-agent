@@ -1,0 +1,30 @@
+schema_version: "1.0"
+definition_of_ready:
+  required:
+    - problem_statement
+    - expected_result
+    - acceptance_criteria
+    - dependencies
+    - affected_components
+    - required_evidence
+    - responsible_agent
+    - priority
+    - out_of_scope
+
+  additional_for_regulatory_work:
+    - research_question
+    - expected_primary_sources
+    - jurisdiction_and_version
+
+  additional_for_visual_work:
+    - purpose
+    - target_location
+    - required_formats
+    - accessibility_requirements
+
+  rejection_reasons:
+    - vague_task
+    - missing_acceptance_criteria
+    - unresolved_blocking_dependency
+    - inactive_agent
+    - duplicate_work

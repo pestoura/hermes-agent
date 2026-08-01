@@ -1,0 +1,27 @@
+schema_version: "1.0"
+project:
+  id: blitzhub-cra-navigator
+  name: BlitzHub CRA Navigator
+  repository: pestoura/blitzhub-cra-navigator
+  visibility: public
+  lifecycle: bootstrap
+  canonical_source: github
+
+purpose: >
+  Produto self-service para apoio à preparação para o Cyber Resilience Act,
+  incluindo determinação de âmbito, rastreabilidade, evidências, análise de
+  lacunas e geração de relatórios.
+
+roles:
+  hermes: technical_executor
+  chatgpt: supervisory_engineering_controller
+  orchestrator: product_workflow_controller
+  kanban: operational_view
+
+principles:
+  - github_is_canonical
+  - changes_use_pull_requests
+  - official_sources_are_required
+  - evidence_and_traceability_are_required
+  - operations_are_non_destructive
+  - supervisory_improvement_is_continuous

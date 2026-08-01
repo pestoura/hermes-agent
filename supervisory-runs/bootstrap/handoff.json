@@ -1,0 +1,80 @@
+{
+  "from": "default",
+  "to": "blitzhub-cra-product-orchestrator",
+  "control_accepted": true,
+  "acknowledgement": "ORCHESTRATOR_CONTROL_ACCEPTED",
+  "active_wave": "wave-1",
+  "github_is_canonical": true,
+  "kanban_is_operational_view": true,
+  "default_agent_released": true,
+  "external_supervision_via_github_only": true,
+  "accepted_at": "2026-07-31T17:25:00+01:00",
+  "runtime_ids": {
+    "orchestrator_run_id": 9,
+    "orchestrator_pid": 3138498,
+    "worker_run_ids": {
+      "blitzhub-cra-regulatory-research": 6,
+      "blitzhub-cra-solution-architect": 7,
+      "blitzhub-cra-devops-repository": 8
+    }
+  },
+  "running_tasks": [
+    {
+      "issue": "#3",
+      "task": "t_005a528d",
+      "assignee": "blitzhub-cra-regulatory-research",
+      "status": "running"
+    },
+    {
+      "issue": "#5",
+      "task": "t_905d1aff",
+      "assignee": "blitzhub-cra-solution-architect",
+      "status": "running"
+    },
+    {
+      "issue": "#6",
+      "task": "t_8a87aa2d",
+      "assignee": "blitzhub-cra-devops-repository",
+      "status": "running"
+    },
+    {
+      "issue": "#7",
+      "task": "t_63a53028",
+      "assignee": "blitzhub-cra-product-orchestrator",
+      "status": "running"
+    }
+  ],
+  "blocked_tasks": [
+    {
+      "issue": "#4",
+      "task": "t_d267e3ae",
+      "assignee": "blitzhub-cra-requirements-traceability",
+      "status": "todo",
+      "blocked_by": "#3"
+    }
+  ],
+  "ready_tasks": [
+    {
+      "issue": "#8",
+      "task": "t_80c46680",
+      "status": "review",
+      "note": "external supervisory contract; no Hermes execution"
+    }
+  ],
+  "remaining_required_findings": [
+    "#10",
+    "#12",
+    "#14",
+    "#15"
+  ],
+  "commit": "650124817995d5678faa008d9e86b8b2e435606f",
+  "board_readback": {
+    "name": "BlitzHub \u2014 CRA Navigator",
+    "orchestrator_profile": "blitzhub-cra-product-orchestrator",
+    "default_assignee": "blitzhub-cra-product-orchestrator",
+    "orchestration_mode": "manual",
+    "auto_decompose": false,
+    "effective_max_in_progress": 10,
+    "effective_per_agent_max_in_progress": 1
+  }
+}

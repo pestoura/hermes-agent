@@ -1,0 +1,187 @@
+schema_version: "1.1"
+provisioning:
+  mode: create_or_reconcile_native_runtime_agents
+  runtime: hermes
+  use_native_profiles_or_agents: true
+  persistent_agents_required: true
+  temporary_subagents_do_not_satisfy_requirement: true
+  verify_by_runtime_readback: true
+  idempotency_key_template: agent:blitzhub:cra:navigator:<agent-id>
+  generic_soul_forbidden: true
+  generic_soul_signature: "You are Hermes Agent, an intelligent AI assistant created by Nous Research"
+
+shared_context:
+  repository: pestoura/blitzhub-cra-navigator
+  default_branch: main
+  board: blitzhub-cra-navigator
+  workspace: blitzhub
+  project: cra-navigator
+  common_contract: agents/contracts/common-engineering-contract.yaml
+  runtime_profile_root: /home/estourpm/.hermes/profiles
+  runtime_soul_filename: SOUL.md
+  canonical_documents:
+    - README.md
+    - BOOTSTRAP_DIRECTIVE.md
+    - .blitzhub/project.yaml
+    - .blitzhub/agent-waves.yaml
+    - .blitzhub/orchestration.yaml
+    - .blitzhub/board-provisioning.yaml
+    - .blitzhub/definition-of-ready.yaml
+    - .blitzhub/definition-of-done.yaml
+    - .blitzhub/quality-gates.yaml
+    - docs/validation-and-reproduction.md
+
+agents:
+  - id: cra-product-orchestrator
+    runtime_name: blitzhub-cra-product-orchestrator
+    definition: agents/definitions/cra-product-orchestrator.yaml
+    prompt: agents/prompts/cra-product-orchestrator.md
+    soul_source: agents/souls/cra-product-orchestrator.SOUL.md
+    soul_runtime_path: /home/estourpm/.hermes/profiles/blitzhub-cra-product-orchestrator/SOUL.md
+    initial_issue: 7
+    initial_state: active
+    board_role: owner
+    capabilities:
+      - github_read
+      - github_issue_and_pr_write
+      - kanban_read_write
+      - agent_status_read
+      - orchestration_reports_write
+    denied_capabilities:
+      - deep_regulatory_authority
+      - product_feature_implementation
+
+  - id: regulatory-research-engineer
+    runtime_name: blitzhub-cra-regulatory-research
+    definition: agents/definitions/regulatory-research-engineer.yaml
+    prompt: agents/prompts/regulatory-research-engineer.md
+    soul_source: agents/souls/regulatory-research-engineer.SOUL.md
+    soul_runtime_path: /home/estourpm/.hermes/profiles/blitzhub-cra-regulatory-research/SOUL.md
+    initial_issue: 3
+    initial_state: active
+    board_role: worker
+    capabilities:
+      - github_read_write
+      - web_research
+      - source_validation
+      - yaml_and_test_execution
+
+  - id: requirements-traceability-engineer
+    runtime_name: blitzhub-cra-requirements-traceability
+    definition: agents/definitions/requirements-traceability-engineer.yaml
+    prompt: agents/prompts/requirements-traceability-engineer.md
+    soul_source: agents/souls/requirements-traceability-engineer.SOUL.md
+    soul_runtime_path: /home/estourpm/.hermes/profiles/blitzhub-cra-requirements-traceability/SOUL.md
+    initial_issue: 4
+    initial_state: active_dependency_gated
+    board_role: worker
+    capabilities:
+      - github_read_write
+      - schema_design
+      - validation_test_execution
+    dispatch_guard:
+      - issue_3_completed
+      - source_catalog_accepted
+
+  - id: solution-architect
+    runtime_name: blitzhub-cra-solution-architect
+    definition: agents/definitions/solution-architect.yaml
+    prompt: agents/prompts/solution-architect.md
+    soul_source: agents/souls/solution-architect.SOUL.md
+    soul_runtime_path: /home/estourpm/.hermes/profiles/blitzhub-cra-solution-architect/SOUL.md
+    initial_issue: 5
+    initial_state: active
+    board_role: worker
+    capabilities:
+      - github_read_write
+      - architecture_modelling
+      - threat_modelling
+      - documentation_generation
+
+  - id: devops-repository-engineer
+    runtime_name: blitzhub-cra-devops-repository
+    definition: agents/definitions/devops-repository-engineer.yaml
+    prompt: agents/prompts/devops-repository-engineer.md
+    soul_source: agents/souls/devops-repository-engineer.SOUL.md
+    soul_runtime_path: /home/estourpm/.hermes/profiles/blitzhub-cra-devops-repository/SOUL.md
+    initial_issue: 6
+    initial_state: active
+    board_role: worker
+    capabilities:
+      - github_read_write
+      - github_actions
+      - validation_tooling
+      - test_execution
+      - secret_scanning_configuration
+
+creation_sequence:
+  - cra-product-orchestrator
+  - regulatory-research-engineer
+  - requirements-traceability-engineer
+  - solution-architect
+  - devops-repository-engineer
+
+per_agent_post_creation:
+  - attach_shared_context
+  - attach_definition
+  - attach_prompt
+  - install_or_reconcile_role_specific_soul
+  - reject_generic_soul
+  - bind_repository
+  - bind_board
+  - apply_capabilities
+  - run_health_check
+  - record_runtime_id
+
+soul_installation:
+  operation: atomic_replace_with_backup
+  backup_existing: true
+  compare_sha256_before_write: true
+  verify_sha256_after_write: true
+  runtime_readback_required: true
+  ui_readback_when_available: true
+  idempotent_when_hash_matches: true
+
+health_check_acceptance:
+  status: healthy
+  required_checks:
+    - repository_read
+    - issue_read
+    - board_read
+    - own_card_update
+    - profile_materialized
+    - profile_registered
+    - dispatcher_registry_lookup
+    - profile_assignable
+    - role_specific_soul_present
+    - generic_soul_signature_absent
+    - soul_sha256_match
+    - soul_runtime_readback
+    - kanban_assign_round_trip
+    - branch_creation_capability
+    - pull_request_capability
+  required_evidence_fields:
+    - soul_source
+    - soul_runtime_path
+    - soul_sha256_expected
+    - soul_sha256_actual
+    - soul_hash_match
+    - soul_specific
+    - generic_soul_signature_found
+    - registry_consulted
+    - resolved_identifier
+    - assign_readback_passed
+    - profile_materialized
+    - profile_registered
+    - profile_assignable
+  evidence_path_template: supervisory-runs/bootstrap/agents/<agent-id>-health.json
+
+activation_acceptance:
+  - five_runtime_agents_exist
+  - five_runtime_ids_recorded
+  - five_role_specific_souls_installed
+  - five_soul_hashes_match
+  - zero_generic_souls_detected
+  - five_health_checks_pass
+  - all_agents_bound_to_repository_and_board
+  - only_wave_1_agents_active

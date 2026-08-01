@@ -1,0 +1,220 @@
+schema_version: "1.0"
+# ============================================================================
+# Source Catalog Entry Schema
+# ============================================================================
+# Defines the expected structure for entries in research/sources/catalog.yaml.
+# Used by tests/test_source_catalog.py and scripts/validate_source_catalog.py.
+#
+# All fields marked required_by_policy are mandated by
+# .blitzhub/policies/source-policy.yaml (section 3: required_metadata).
+# ============================================================================
+
+schema:
+  description: "Schema for official CRA source catalogue entries"
+  fields:
+    # --- Identifiers ---
+    id:
+      description: "Unique machine-readable identifier for this source entry"
+      type: string
+      required: true
+      pattern: "^[a-z0-9-]+$"
+
+    authority:
+      description: "Issuing authority (e.g., 'European Parliament and of the Council')"
+      type: string
+      required_by_policy: true
+
+    document_identifier:
+      description: "Official document identifier (regulation number, CELEX, communication number)"
+      type: string
+      required_by_policy: true
+      min_length: 3
+
+    celex:
+      description: "CELEX number for EU legal acts (e.g., 32024R2847)"
+      type: string
+      required: false
+      pattern: "^3[0-9]{4}[RLD][0-9]{4}$"
+      documentation:
+        sector_3: legal act
+        year_digits: 4
+        type_letter:
+          R: regulation
+          L: directive
+          D: decision
+        number_digits: 4
+
+    title:
+      description: "Official document title in English"
+      type: string
+      required_by_policy: true
+
+    short_title:
+      description: "Human-readable short title for display"
+      type: string
+      required: false
+
+    oj_reference:
+      description: "Official Journal citation (e.g., 'OJ L, 2024/2847, 20.11.2024, p. 1-43')"
+      type: string
+      required: false
+
+    # --- Location / URL ---
+    source_url:
+      description: "Canonical URL as published by the authority"
+      type: string
+      required_by_policy: true
+      pattern: "^https?://"
+
+    eli_url:
+      description: "European Legislation Identifier (ELI) URI"
+      type: string
+      required: false
+
+    summary_url:
+      description: "Link to an EC summary page (secondary reference)"
+      type: string
+      required: false
+
+    # --- Article / Section references ---
+    article_or_section:
+      description: "Key articles, annexes, or sections covered by this source"
+      type: mapping
+      required_by_policy: true
+      min_entries: 1
+      allowed_keys:
+        - articles
+        - key_articles
+        - chapters
+        - annexes
+        - sections
+        - content
+        - references
+        - interpretation_note
+
+    interpretation_note:
+      description: "Explicit separation of interpretation from fact for entries containing interpretive content"
+      type: string
+      required: false
+      condition: "Required when article_or_section.content contains interpretive language (may, should, could, implies, suggests, according to)"
+
+    # --- Dates ---
+    publication_or_version_date:
+      description: "Date of publication or version (ISO 8601: YYYY-MM-DD)"
+      type: string
+      required_by_policy: true
+      format: "YYYY-MM-DD"
+
+    retrieved_at:
+      description: "Date the source was retrieved/verified (ISO 8601)"
+      type: string
+      required_by_policy: true
+      format: "YYYY-MM-DD"
+
+    validation_date:
+      description: "Date the metadata was last verified against the live source"
+      type: string
+      required: false
+      format: "YYYY-MM-DD"
+
+    entry_into_force:
+      description: "Date the act entered into force"
+      type: string
+      required: false
+      format: "YYYY-MM-DD"
+
+    application_start:
+      description: "Date the act started to apply in full"
+      type: string
+      required: false
+      format: "YYYY-MM-DD"
+
+    partial_application:
+      description: "Dates for partial application of the act"
+      type: mapping
+      required: false
+
+    # --- Classification ---
+    source_type:
+      description: "Type of source document"
+      type: string
+      required_by_policy: true
+      enum:
+        - primary_regulation
+        - implementing_act
+        - delegated_act
+        - commission_guidance
+        - faq
+        - enisa_publication
+        - enisa_tool
+        - authority_website
+        - related_legislation
+
+    validation_status:
+      description: "Validation status of this entry"
+      type: string
+      required_by_policy: true
+      enum:
+        - verified_directly
+        - pending_review
+        - stale
+        - rejected
+
+    jurisdiction:
+      description: "Jurisdiction of the issuing authority"
+      type: string
+      required: false
+
+    language:
+      description: "Language of the source"
+      type: string
+      required: false
+
+    access_note:
+      description: "Any access limitation, licensing, or redistribution note"
+      type: string
+      required: false
+
+    # --- Quality metadata ---
+    metadata_quality:
+      description: "Checklist of required metadata field presence"
+      type: mapping
+      required: false
+      fields:
+        has_authority: boolean
+        has_document_identifier: boolean
+        has_article_or_section: boolean
+        has_canonical_url: boolean
+        has_publication_date: boolean
+        has_retrieval_date: boolean
+        has_source_type: boolean
+        has_validation_status: boolean
+
+# --- Validation rules (enforced by tests/test_source_catalog.py) ---
+validation_rules:
+  source_policy_reference: ".blitzhub/policies/source-policy.yaml"
+  required_metadata_fields:
+    - authority
+    - title
+    - document_identifier
+    - article_or_section
+    - source_url
+    - publication_or_version_date
+    - retrieved_at
+    - source_type
+    - validation_status
+  required_separation_categories:
+    - fact
+    - interpretation
+    - inference
+    - recommendation
+    - open_question
+  prohibited_content_fields:
+    - full_text
+    - body
+  official_domains:
+    - eur-lex.europa.eu
+    - ec.europa.eu
+    - enisa.europa.eu
+    - data.europa.eu
+    - op.europa.eu

@@ -1,0 +1,406 @@
+{
+  "contract": "chatgpt-web-github-hermes",
+  "validation_status": "validated",
+  "canonicalization_status": "canonical",
+  "finalized_at_utc": "2026-07-31T17:54:44Z",
+  "timestamp_utc": "2026-07-31T17:12:00Z",
+  "chatgpt_run_timestamp": "2026-07-31T17:12:00Z",
+  "commit_analyzed": "109d4cbc467a3205d8adb8cce8889c31302a42d8",
+  "external_pr": 21,
+  "external_pr_head": "b4d568211d7d0c51b80aea4663dc947a58d1de2f",
+  "external_pr_origin": "chatgpt-supervisor",
+  "external_pr_branch_prefix": "chatgpt/supervisory-run-20260731T1712Z",
+  "external_pr_merge_commit": "c7e4591",
+  "issue_8_comment_detected": true,
+  "issue_8_comment_timestamp": "2026-07-31T17:15:36Z",
+  "findings_detected": [
+    "SUP-20260731-001",
+    "SUP-20260731-002",
+    "SUP-20260731-003",
+    "SUP-20260731-004",
+    "SUP-20260731-005",
+    "SUP-20260731-006"
+  ],
+  "external_supervisor_detected": true,
+  "direct_chatgpt_hermes_integration": false,
+  "handoff_channel": "github",
+  "validation_pull_request": {
+    "number": 22,
+    "branch": "hermes/sup-contract-first-run-validation",
+    "head": "6bf534dffd9fbd6f668436415c3838d2307d4b75",
+    "merge_commit": "d16d22a",
+    "governance_check": "SUCCESS",
+    "purpose": "canonical contract evidence",
+    "mergeable": true,
+    "merged": true,
+    "finalized_on_main": true,
+    "initial_head": "6bf534dffd9fbd6f668436415c3838d2307d4b75",
+    "final_head": "22f24ee12a12b0ea6589953ad88546e2553bc8af",
+    "merged_at": "2026-07-31T17:42:29Z"
+  },
+  "artifacts_validated": {
+    "summary.md": {
+      "present": true,
+      "valid": true,
+      "path": "supervisory-runs/2026-07-31T17-12-00Z/summary.md",
+      "on_main": true
+    },
+    "findings.json": {
+      "present": true,
+      "valid": true,
+      "path": "supervisory-runs/2026-07-31T17-12-00Z/findings.json",
+      "on_main": true
+    },
+    "actions.json": {
+      "present": true,
+      "valid": true,
+      "path": "supervisory-runs/2026-07-31T17-12-00Z/actions.json",
+      "on_main": true
+    },
+    "source-validation.json": {
+      "present": true,
+      "valid": true,
+      "path": "supervisory-runs/2026-07-31T17-12-00Z/source-validation.json",
+      "on_main": true
+    },
+    "code-review.json": {
+      "present": true,
+      "valid": true,
+      "path": "supervisory-runs/2026-07-31T17-12-00Z/code-review.json",
+      "on_main": true
+    },
+    "orchestration-update.json": {
+      "present": true,
+      "valid": true,
+      "path": "supervisory-runs/2026-07-31T17-12-00Z/orchestration-update.json",
+      "on_main": true
+    }
+  },
+  "readme_state_corrected": true,
+  "readme_before": "BOOTSTRAP_PENDING",
+  "readme_after": "FOUNDATION_IN_PROGRESS",
+  "readme_on_main": true,
+  "issue_3_rework_materialized": true,
+  "issue_3": {
+    "github_issue": 3,
+    "pull_request": 16,
+    "owner": "blitzhub-cra-regulatory-research",
+    "action": "rework_required",
+    "completion_blocked": true,
+    "required_findings": [
+      "SUP-20260731-001",
+      "SUP-20260731-002",
+      "SUP-20260731-003"
+    ],
+    "finding_details": {
+      "SUP-20260731-001": "NIS2 CELEX uses 32022R2555 instead of 32022L2555; title and OJ reference incorrect",
+      "SUP-20260731-002": "Regulation (EU) 2025/2392 publication date recorded as 2025-11-29, official is 2025-12-01",
+      "SUP-20260731-003": "CRA single reporting platform is Article 16, not Article 15; all article mappings must be verified against official text"
+    },
+    "pr_16_checks": {
+      "governance": "SUCCESS",
+      "note": "Passing governance checks do not validate legal metadata correctness per code-review.json"
+    }
+  },
+  "issue_4_block_preserved": true,
+  "issue_4": {
+    "github_issue": 4,
+    "owner": "blitzhub-cra-requirements-traceability",
+    "state": "blocked",
+    "blocked_by": [
+      3
+    ],
+    "dispatch_allowed": false,
+    "dispatch_guard": [
+      "issue_3_completed",
+      "source_catalog_accepted"
+    ],
+    "reason": "Dependency #3 is not accepted. REQUIRED findings SUP-20260731-001/002/003 remain open."
+  },
+  "issue_6_deduplication_materialized": true,
+  "issue_6": {
+    "github_issue": 6,
+    "owner": "blitzhub-cra-devops-repository",
+    "action": "deduplicate_before_review",
+    "competing_pull_requests": [
+      17,
+      20
+    ],
+    "dispatch_duplicates_allowed": false,
+    "comparison_criteria": [
+      "coverage of Issue #6 acceptance criteria",
+      "YAML parser quality",
+      "schema validation",
+      "cross-manifest references",
+      "positive and negative tests",
+      "secret scanning",
+      "relation to Issues #10 and #12",
+      "merge conflicts",
+      "size and future maintainability"
+    ],
+    "pr_17": {
+      "head": "650124817995d5678faa008d9e86b8b2e435606f",
+      "checks": {
+        "governance": "FAILURE",
+        "secret-scan": "FAILURE"
+      },
+      "status": "hold_for_deduplication"
+    },
+    "pr_20": {
+      "head": "a7199b01db19725529e0d6b9e7b63f60f0479f44",
+      "checks": {
+        "governance": "SUCCESS",
+        "secret-scan": "FAILURE"
+      },
+      "status": "hold_for_deduplication"
+    }
+  },
+  "pr_18_review_recommendation_materialized": true,
+  "pr_18": {
+    "pull_request": 18,
+    "finding_id": "SUP-20260731-006",
+    "classification": "RECOMMENDED",
+    "action": "sampled_review_recommended",
+    "merge_blocking": false,
+    "sampling_plan": [
+      "ADRs (ADR-001..009)",
+      "component contracts (00-09)",
+      "threat model (threat-model.yaml)",
+      "security decisions (ADR-003, ADR-006, ADR-009)",
+      "correspondence with Issue #5 acceptance criteria"
+    ],
+    "checks": {
+      "governance": "SUCCESS"
+    },
+    "note": "Passing governance checks do not validate architecture content."
+  },
+  "issue_8_not_dispatched": true,
+  "issue_8": {
+    "github_issue": 8,
+    "github_state_during_validation": "open",
+    "kanban_state_during_validation": "supervisory_review",
+    "github_final_state": "closed",
+    "github_state_reason": "completed",
+    "closed_at": "2026-07-31T17:32:42Z",
+    "kanban_final_state": "done",
+    "archived": false,
+    "archive_supported": false,
+    "owner_agent": "chatgpt-supervisor",
+    "wave": "external",
+    "executor": "external",
+    "external_executor": "chatgpt-supervisor",
+    "dispatch_allowed": false,
+    "has_hermes_assignee": false,
+    "has_run_session": false,
+    "consumes_dispatcher_slot": false,
+    "closure_marker": "CHATGPT_GITHUB_HERMES_CONTRACT_VALIDATED",
+    "note": "Issue #8 is a governance/configuration issue defining the supervisory contract, not an operational task for Hermes agents.",
+    "final_column": "done"
+  },
+  "duplicates_created": 0,
+  "tasks_created_by_deduplication": [],
+  "tasks_not_created_by_deduplication": [
+    "SUP-20260731-001 -> Issue #3 (existing, not duplicated)",
+    "SUP-20260731-002 -> Issue #3 (existing, not duplicated)",
+    "SUP-20260731-003 -> Issue #3 (existing, not duplicated)",
+    "SUP-20260731-004 -> Issue #6 (existing, not duplicated)",
+    "SUP-20260731-005 -> README.md corrected in PR #21 (not a new card)",
+    "SUP-20260731-006 -> PR #18 sampled review planned (single card, not duplicated)"
+  ],
+  "wave_1_active": true,
+  "wave_2_pending": true,
+  "wave_3_pending": true,
+  "wave_decisions": {
+    "wave-1": {
+      "status": "active",
+      "decision": "maintain",
+      "reason": "Foundation deliverables remain under review or blocked."
+    },
+    "wave-2": {
+      "status": "pending",
+      "decision": "do_not_activate",
+      "reason": "Regulatory catalogue and architecture baseline are not yet accepted; requirements schema is blocked."
+    },
+    "wave-3": {
+      "status": "pending",
+      "decision": "do_not_activate",
+      "reason": "No accepted functional end-to-end implementation exists."
+    }
+  },
+  "kanban_state": {
+    "board_id": "blitzhub-cra-navigator",
+    "board_name": "BlitzHub — CRA Navigator",
+    "source_of_truth": "github",
+    "cards_before": [
+      {
+        "issue": 2,
+        "column": "in_progress",
+        "owner": "cra-product-orchestrator",
+        "work_type": "bootstrap",
+        "wave": "wave-1"
+      },
+      {
+        "issue": 3,
+        "column": "in_progress",
+        "owner": "regulatory-research-engineer",
+        "work_type": "research",
+        "wave": "wave-1"
+      },
+      {
+        "issue": 4,
+        "column": "backlog",
+        "owner": "requirements-traceability-engineer",
+        "work_type": "requirements",
+        "wave": "wave-1",
+        "blocked_by": [
+          3
+        ]
+      },
+      {
+        "issue": 5,
+        "column": "in_progress",
+        "owner": "solution-architect",
+        "work_type": "architecture",
+        "wave": "wave-1"
+      },
+      {
+        "issue": 6,
+        "column": "in_progress",
+        "owner": "devops-repository-engineer",
+        "work_type": "devops",
+        "wave": "wave-1"
+      },
+      {
+        "issue": 7,
+        "column": "in_progress",
+        "owner": "cra-product-orchestrator",
+        "work_type": "orchestration",
+        "wave": "wave-1"
+      },
+      {
+        "issue": 8,
+        "column": "supervisory_review",
+        "owner": "chatgpt-supervisor",
+        "work_type": "external",
+        "wave": "external"
+      }
+    ],
+    "cards_after": [
+      {
+        "issue": 2,
+        "column": "done",
+        "owner": "cra-product-orchestrator",
+        "work_type": "bootstrap",
+        "wave": "wave-1"
+      },
+      {
+        "issue": 3,
+        "column": "rework",
+        "owner": "regulatory-research-engineer",
+        "work_type": "research",
+        "wave": "wave-1",
+        "required_findings": [
+          "SUP-20260731-001",
+          "SUP-20260731-002",
+          "SUP-20260731-003"
+        ]
+      },
+      {
+        "issue": 4,
+        "column": "blocked",
+        "owner": "requirements-traceability-engineer",
+        "work_type": "requirements",
+        "wave": "wave-1",
+        "blocked_by": [
+          3
+        ],
+        "dispatch_allowed": false
+      },
+      {
+        "issue": 5,
+        "column": "in_progress",
+        "owner": "solution-architect",
+        "work_type": "architecture",
+        "wave": "wave-1"
+      },
+      {
+        "issue": 6,
+        "column": "rework",
+        "owner": "devops-repository-engineer",
+        "work_type": "devops",
+        "wave": "wave-1",
+        "deduplication_required": true,
+        "competing_prs": [
+          17,
+          20
+        ]
+      },
+      {
+        "issue": 7,
+        "column": "in_progress",
+        "owner": "cra-product-orchestrator",
+        "work_type": "orchestration",
+        "wave": "wave-1"
+      },
+      {
+        "issue": 8,
+        "column": "done",
+        "archived": false,
+        "owner": "chatgpt-supervisor",
+        "work_type": "external",
+        "wave": "external",
+        "dispatch_allowed": false,
+        "has_hermes_assignee": false,
+        "consumes_dispatcher_slot": false,
+        "archive_supported": false,
+        "final_column": "done"
+      },
+      {
+        "issue": 21,
+        "column": "done",
+        "owner": "chatgpt-supervisor",
+        "work_type": "documentation",
+        "wave": "external",
+        "external_executor": "chatgpt-supervisor",
+        "hermes_dispatch_allowed": false
+      },
+      {
+        "issue": 22,
+        "column": "done",
+        "owner": "cra-product-orchestrator",
+        "work_type": "documentation",
+        "wave": "external",
+        "external_executor": "chatgpt-supervisor",
+        "hermes_dispatch_allowed": false
+      }
+    ]
+  },
+  "pr_21_checks": {
+    "governance": "SUCCESS",
+    "url": "https://github.com/pestoura/blitzhub-cra-navigator/actions/runs/30650454216/job/91222126185",
+    "completed_at": "2026-07-31T17:15:40Z"
+  },
+  "main_final_state": {
+    "final_sha": "7f04b38c18c897bd09ba1db443c82cc647f95156",
+    "merge_commit_pr_21": "c7e4591",
+    "merge_commit_pr_22": "d16d22a",
+    "readback_verified": true,
+    "merge_commit_pr_23": "cda878cedebce265560c8828a0177fac0ba6a1ea",
+    "merge_commit_pr_25": "46e7489",
+    "all_prs_merged": true,
+    "merge_commit_pr_26": "0085380",
+    "merge_commit_pr_27": "7f04b38"
+  },
+  "secret_scan_result": "no_secrets_detected",
+  "errors_found": [],
+  "finalization_pull_request": {
+    "number": 23,
+    "branch": "hermes/sup-contract-finalize",
+    "head": "a668460378d683420e2f328137756ba1baf26c62",
+    "merge_commit": "cda878cedebce265560c8828a0177fac0ba6a1ea",
+    "governance_check": "SUCCESS",
+    "purpose": "finalize canonical state with real merge metadata",
+    "merged": true,
+    "merged_at": "2026-07-31T17:54:44Z"
+  }
+}

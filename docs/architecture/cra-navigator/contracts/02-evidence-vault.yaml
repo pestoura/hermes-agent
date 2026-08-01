@@ -1,0 +1,96 @@
+schema_version: "1.0"
+contract_id: blitzhub-cra-evidence-vault
+namespace: com.blitzhub.cra.vault
+stability: stable
+owner: backend-domain-engineer
+
+description: >
+  Interface do Evidence Vault. Armazenamento sandboxed de binários de evidências.
+  Path traversal proibido; content-addressing (SHA-256); magic-byte validation.
+
+interface:
+  EvidenceVault:
+    ingest:
+      input:
+        tempFile: "string (path temp, inside app local)"
+        meta: "FileMeta"
+      returns: "EvidenceRecord"
+      precondition: "validateSafety(file) MUST pass first"
+      guarantees:
+        - "name reduced to leaf only (no .., /, \\, NUL, \\uXXXX)"
+        - "stored as <sha256>.<safe_ext> in evidence/"
+        - "original_name stored as metadata only, never executed"
+    read:
+      input:
+        evidenceId: "string (sha256)"
+      returns: "Blob | null"
+      guarantees:
+        - "re-hashes on read to verify integrity"
+        - "never returns a path that escapes evidence/"
+    validateSafety:
+      input:
+        file: "FileMeta + bytes"
+      returns: "SafetyVerdict"
+      checks:
+        - "magic bytes vs declared mime"
+        - "size within per-type cap"
+        - "extension in allowlist / not in blocklist"
+        - "name has no traversal sequences"
+    quarantine:
+      input:
+        evidenceId: "string"
+      returns: "void"
+      description: "Move file to quarantine/, state=quarantined"
+
+allowlist_types:
+  - extension: "pdf"
+    mime: "application/pdf"
+    magic: "%PDF-"
+    max_size: 52428800        # 50 MB
+  - extension: "png"
+    mime: "image/png"
+    magic: "\x89PNG"
+    max_size: 26214400        # 25 MB
+  - extension: "jpg|jpeg"
+    mime: "image/jpeg"
+    magic: "\xFF\xD8"
+    max_size: 26214400
+  - extension: "gif"
+    mime: "image/gif"
+    magic: "GIF87a|GIF89a"
+    max_size: 26214400
+  - extension: "webp"
+    mime: "image/webp"
+    magic: "RIFF....WEBP"
+    max_size: 26214400
+  - extension: "txt|md|csv|log"
+    mime: "text/plain"
+    magic: "(text heuristic)"
+    max_size: 10485760        # 10 MB
+  - extension: "xlsx"
+    mime: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    magic: "PK\x03\x04"
+    max_size: 31457280        # 30 MB
+  - extension: "zip|7z|7zip|rar|tar|gz|tgz"
+    mime: "application/zip|application/x-7z-compressed|application/x-rar-compressed|application/x-tar|application/gzip"
+    magic: "(archive heuristic)"
+    max_size: 104857600       # 100 MB
+    extraction_quotas:
+      max_members: 10000
+      max_member_size: 10485760  # 10 MB
+      max_depth: 5
+      total_uncompressed: 209715200  # 200 MB
+
+blocklist_extensions:
+  - exe, dll, bat, sh, ps1, js, vbs, jar, com, scr, msi, sys, drv
+
+trust_boundary:
+  - "vault is Zona B; all inputs MUST come via Domain Engine with prior validateSafety"
+  - "file paths never escape evidence/ leaf namespace"
+
+verification_path:
+  tests:
+    - mime_spoof_detected
+    - path_traversal_rejected
+    - zip_bomb_limit
+    - content_addressing_idempotent
