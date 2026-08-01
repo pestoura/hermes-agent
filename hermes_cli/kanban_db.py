@@ -2849,6 +2849,249 @@ def _canonical_assignee(assignee: Optional[str]) -> Optional[str]:
     return normalize_profile_name(assignee)
 
 
+_GITHUB_URL_RE = re.compile(
+    r"https?://github\.com/(?P<owner>[^/\s]+)/(?P<repo>[^/\s]+)"
+)
+_GITHUB_ISSUE_RE = re.compile(
+    r"https?://github\.com/(?P<owner>[^/\s]+)/(?P<repo>[^/\s]+)/(issues|pull)/(?P<number>\d+)"
+)
+
+
+def _github_refs_from_text(text: Optional[str]) -> list[dict[str, str]]:
+    """Extract unique GitHub owner/repo/issue refs from a blob of text."""
+    if not text:
+        return []
+    refs: list[dict[str, str]] = []
+    seen: set[tuple[str, str, str]] = set()
+    for url_match in _GITHUB_URL_RE.finditer(text):
+        owner = url_match.group("owner")
+        repo = url_match.group("repo")
+        for issue_match in _GITHUB_ISSUE_RE.finditer(text):
+            if (
+                issue_match.group("owner") == owner
+                and issue_match.group("repo") == repo
+            ):
+                key = (owner, repo, issue_match.group("number"))
+                if key not in seen:
+                    seen.add(key)
+                    refs.append(
+                        {
+                            "owner": owner,
+                            "repo": repo,
+                            "number": issue_match.group("number"),
+                        }
+                    )
+    return refs
+
+
+def _canonical_github_idempotency_key(
+    owner: str, repo: str, number: str
+) -> str:
+    return f"github:{owner}/{repo}#{number}"
+
+
+def backfill_idempotency(
+    conn: sqlite3.Connection,
+    *,
+    board: Optional[str] = None,
+    repo: Optional[str] = None,
+    apply: bool = False,
+    json: bool = False,
+) -> dict[str, Any]:
+    """Scan legacy tasks missing ``idempotency_key`` and backfill them.
+
+    Returns a report dict; when ``apply=False`` (default) this is a dry-run.
+    """
+    repo_norm = str(repo).strip().lower() if repo else None
+    rows = conn.execute(
+        "SELECT * FROM tasks WHERE idempotency_key IS NULL AND status != 'archived'"
+    ).fetchall()
+    candidates: dict[str, list[dict[str, Any]]] = {}
+    skipped_conflict = 0
+    for row in rows:
+        task = Task.from_row(row)
+        if repo_norm:
+            hit = False
+            for field in (
+                task.title or "",
+                task.body or "",
+                task.branch_name or "",
+                str(task.project_id or ""),
+                task.workspace_path or "",
+                task.session_id or "",
+            ):
+                if repo_norm in field.lower():
+                    hit = True
+                    break
+            if not hit:
+                continue
+        refs = _github_refs_from_text(
+            "\n".join(
+                [
+                    task.title or "",
+                    task.body or "",
+                    task.branch_name or "",
+                    str(task.project_id or ""),
+                    task.workspace_path or "",
+                    task.session_id or "",
+                ]
+            )
+        )
+        if not refs:
+            continue
+        if len(refs) > 1:
+            candidates.setdefault("ambiguous", []).append(
+                {
+                    "task_id": task.id,
+                    "refs": refs,
+                    "status": task.status,
+                    "created_at": task.created_at,
+                }
+            )
+            continue
+        candidate_key = _canonical_github_idempotency_key(
+            refs[0]["owner"], refs[0]["repo"], refs[0]["number"]
+        )
+        existing = conn.execute(
+            "SELECT id FROM tasks WHERE idempotency_key = ? AND status != 'archived'",
+            (candidate_key,),
+        ).fetchone()
+        if existing and existing["id"] != task.id:
+            skipped_conflict += 1
+            candidates.setdefault(
+                "conflict_existing_key", []
+            ).append(
+                {
+                    "task_id": task.id,
+                    "candidate_key": candidate_key,
+                    "existing_task_id": existing["id"],
+                }
+            )
+            continue
+        candidates.setdefault(candidate_key, []).append(
+            {
+                "task_id": task.id,
+                "status": task.status,
+                "created_at": task.created_at,
+            }
+        )
+
+    grouped: dict[str, Any] = {
+        "single": [],
+        "duplicate_unambiguous": [],
+        "ambiguous": [],
+        "conflict_existing_key": [],
+    }
+    for key, items in candidates.items():
+        if key == "ambiguous":
+            grouped["ambiguous"].extend(items)
+            continue
+        if key == "conflict_existing_key":
+            grouped["conflict_existing_key"].extend(items)
+            continue
+        if len(items) == 1:
+            grouped["single"].append(
+                {
+                    "candidate_key": key,
+                    "canonical_task_id": items[0]["task_id"],
+                    "tasks": items,
+                }
+            )
+            continue
+        def _sort_key(item: dict[str, Any]) -> tuple[Any, ...]:
+            task = get_task(conn, item["task_id"]) or item
+            return (
+                0 if task.idempotency_key else 1,
+                0 if task.status == "done" else 1,
+                -(len(list_comments(conn, task.id)) + len(list_events(conn, task.id))),
+                -len(list_runs(conn, task.id)),
+                0 if (task.workspace_path and task.workspace_path.strip()) else 1,
+                task.created_at,
+                task.id,
+            )
+        items.sort(key=_sort_key)
+        canonical = items[0]
+        residuals = items[1:]
+        grouped["duplicate_unambiguous"].append(
+            {
+                "candidate_key": key,
+                "canonical_task_id": canonical["task_id"],
+                "tasks": items,
+            }
+        )
+
+    report: dict[str, Any] = {
+        "before_total": len(rows),
+        "after_total": len(rows),
+        "counts": {
+            "single": len(grouped["single"]),
+            "duplicate_unambiguous": len(grouped["duplicate_unambiguous"]),
+            "ambiguous": len(grouped["ambiguous"]),
+            "conflict_existing_key": len(grouped["conflict_existing_key"]),
+            "skipped_conflict_existing": skipped_conflict,
+        },
+        "single": grouped["single"],
+        "duplicate_unambiguous": grouped["duplicate_unambiguous"],
+        "ambiguous": grouped["ambiguous"],
+        "conflict_existing_key": grouped["conflict_existing_key"],
+        "applied": False,
+        "rollback_guidance": (
+            "Re-run with --apply to backfill. To undo an applied backfill, "
+            "set idempotency_key=NULL on affected tasks and unarchive archived residuals."
+        ),
+    }
+    if apply and (grouped["single"] or grouped["duplicate_unambiguous"]):
+        now = int(time.time())
+        with write_txn(conn):
+            for item in grouped["single"]:
+                conn.execute(
+                    "UPDATE tasks SET idempotency_key = ? WHERE id = ?",
+                    (item["candidate_key"], item["canonical_task_id"]),
+                )
+                _append_event(
+                    conn,
+                    item["canonical_task_id"],
+                    "idempotency_backfill",
+                    {
+                        "canonical_task_id": item["canonical_task_id"],
+                        "reason": "backfill_single",
+                    },
+                )
+            for item in grouped["duplicate_unambiguous"]:
+                canonical_id = item["canonical_task_id"]
+                conn.execute(
+                    "UPDATE tasks SET idempotency_key = ? WHERE id = ?",
+                    (item["candidate_key"], canonical_id),
+                )
+                _append_event(
+                    conn,
+                    canonical_id,
+                    "idempotency_backfill",
+                    {
+                        "canonical_task_id": canonical_id,
+                        "reason": "backfill_duplicate_canonical",
+                    },
+                )
+                for dup in item["tasks"][1:]:
+                    conn.execute(
+                        "UPDATE tasks SET status = 'archived' WHERE id = ?",
+                        (dup["task_id"],),
+                    )
+                    _append_event(
+                        conn,
+                        dup["task_id"],
+                        "idempotency_backfill",
+                        {
+                            "canonical_task_id": canonical_id,
+                            "reason": "backfill_duplicate_archived",
+                        },
+                    )
+        report["applied"] = True
+        report["rollback_guidance"] = (
+            "Applied. To undo: set idempotency_key=NULL on affected canonical tasks "
+            "and set status back to original values for archived residuals."
+        )
+    return report
 def create_task(
     conn: sqlite3.Connection,
     *,
