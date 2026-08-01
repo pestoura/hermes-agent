@@ -250,6 +250,49 @@ def build_parser(parent_subparsers: argparse._SubParsersAction) -> argparse.Argu
     # --- init ---
     sub.add_parser("init", help="Create kanban.db if missing (idempotent)")
 
+    # --- dispatch approval ---
+    _p_approve = sub.add_parser(
+        "approve-dispatch",
+        help="Create or inspect a structured dispatch approval",
+        description=(
+            "Create a structured dispatch approval for a task, or inspect the "
+            "current approval when no create flags are passed."
+        ),
+    )
+    _p_approve.add_argument("task_id", help="Task id to approve/inspect")
+    _p_approve.add_argument("--actor", default=None, help="Approving actor (required on create)")
+    _p_approve.add_argument("--source", default=None, help="Approval source (required on create)")
+    _p_approve.add_argument("--note", default=None, help="Optional approval note")
+    _p_approve.add_argument(
+        "--supervisory-run-id", default=None, help="Optional supervisory run id"
+    )
+    _p_approve.add_argument("--approval-version", type=int, default=1, help="Approval schema version")
+    _p_approve.add_argument("--json", action="store_true", help="Emit JSON")
+
+    _p_approval_show = sub.add_parser(
+        "dispatch-approval",
+        help="Show the active structured dispatch approval for a task",
+        description="Read-only view of the active structured dispatch approval.",
+    )
+    _p_approval_show.add_argument("task_id", help="Task id to inspect")
+    _p_approval_show.add_argument("--json", action="store_true", help="Emit JSON")
+
+    # --- legacy migration ---
+    _p_migrate = sub.add_parser(
+        "migrate-legacy-dispatch-approvals",
+        help="Dry-run/apply migration from legacy tasks.result marker to structured approvals",
+        description="Convert existing legacy approval markers into structured approval rows.",
+    )
+    _p_migrate.add_argument("--dry-run", action="store_true", help="Preview without writing")
+    _p_migrate.add_argument("--apply", action="store_true", help="Apply migration")
+    _p_migrate.add_argument("--json", action="store_true", help="Emit JSON")
+    _p_migrate.add_argument(
+        "--actor", default="legacy-migration", help="Actor recorded on migrated approvals"
+    )
+    _p_migrate.add_argument(
+        "--source", default="migrate_legacy_dispatch_approvals", help="Source recorded on migrated approvals"
+    )
+
     # --- boards (new in v2: multi-project support) ---
     p_boards = sub.add_parser(
         "boards",
@@ -1070,6 +1113,9 @@ def kanban_command(args: argparse.Namespace) -> int:
             "archive":  _cmd_archive,
             "tail":     _cmd_tail,
             "dispatch": _cmd_dispatch,
+            "approve-dispatch": _cmd_approve_dispatch,
+            "dispatch-approval": _cmd_dispatch_approval,
+            "migrate-legacy-dispatch-approvals": _cmd_migrate_legacy_dispatch_approvals,
             "daemon":   _cmd_daemon,
             "watch":    _cmd_watch,
             "stats":    _cmd_stats,
@@ -2537,6 +2583,116 @@ def _cmd_dispatch(args: argparse.Namespace) -> int:
             f"Skipped (non-spawnable assignee — terminal lane, OK): "
             f"{', '.join(res.skipped_nonspawnable)}"
         )
+    return 0
+
+
+def _cmd_approve_dispatch(args: argparse.Namespace) -> int:
+    task_id = args.task_id
+    with kb.connect_closing() as conn:
+        task = kb.get_task(conn, task_id)
+    if task is None:
+        print(f"kanban: no such task: {task_id}", file=sys.stderr)
+        return 1
+    if task.status in ("done", "archived"):
+        print(
+            f"kanban: task {task_id} is {task.status}; dispatch approval not allowed",
+            file=sys.stderr,
+        )
+        return 1
+    if args.actor and args.source:
+        with kb.connect_closing() as conn:
+            try:
+                with kb.write_txn(conn):
+                    row = kb.approve_dispatch(
+                        conn,
+                        task_id,
+                        actor=args.actor,
+                        source=args.source,
+                        note=args.note,
+                        supervisory_run_id=args.supervisory_run_id,
+                        approval_version=int(args.approval_version or 1),
+                    )
+            except RuntimeError as exc:
+                print(f"kanban: {exc}", file=sys.stderr)
+                return 1
+            except ValueError as exc:
+                print(f"kanban: {exc}", file=sys.stderr)
+                return 1
+        if args.json:
+            print(json.dumps(row, indent=2, ensure_ascii=False))
+        else:
+            print(
+                f"Approved {task_id} by {row['approved_by']} "
+                f"from {row['source']} at {_fmt_ts(row['approved_at_utc'])}"
+            )
+        return 0
+    row = kb.get_dispatch_approval(kb.connect(), task_id)
+    if row is None:
+        print(f"kanban: no active dispatch approval for {task_id}", file=sys.stderr)
+        return 1
+    if args.json:
+        print(json.dumps(row, indent=2, ensure_ascii=False))
+    else:
+        print(
+            f"Active approval for {task_id}: id={row['id']} "
+            f"by={row['approved_by']} source={row['source']} "
+            f"at={_fmt_ts(row['approved_at_utc'])}"
+        )
+    return 0
+
+
+def _cmd_dispatch_approval(args: argparse.Namespace) -> int:
+    with kb.connect_closing() as conn:
+        row = kb.get_dispatch_approval(conn, args.task_id)
+    if row is None:
+        print(f"kanban: no active dispatch approval for {args.task_id}", file=sys.stderr)
+        return 1
+    if args.json:
+        print(json.dumps(row, indent=2, ensure_ascii=False))
+    else:
+        print(
+            f"Active approval for {args.task_id}: id={row['id']} "
+            f"by={row['approved_by']} source={row['source']} "
+            f"at={_fmt_ts(row['approved_at_utc'])}"
+        )
+    return 0
+
+
+def _cmd_migrate_legacy_dispatch_approvals(args: argparse.Namespace) -> int:
+    if not args.dry_run and not args.apply:
+        print(
+            "kanban: pass --dry-run or --apply",
+            file=sys.stderr,
+        )
+        return 1
+    with kb.connect_closing() as conn:
+        if args.dry_run:
+            rows = kb.migrate_legacy_dispatch_approvals_dry_run(conn)
+        else:
+            try:
+                with kb.write_txn(conn):
+                    rows = kb.migrate_legacy_dispatch_approvals_apply(
+                        conn,
+                        actor=args.actor or "legacy-migration",
+                        source=args.source or "migrate_legacy_dispatch_approvals",
+                    )
+            except RuntimeError as exc:
+                print(f"kanban: {exc}", file=sys.stderr)
+                return 1
+            except ValueError as exc:
+                print(f"kanban: {exc}", file=sys.stderr)
+                return 1
+    if args.json:
+        print(json.dumps(rows, indent=2, ensure_ascii=False))
+        return 0
+    if args.dry_run:
+        print(f"Legacy approval migrations pending: {len(rows)}")
+        for item in rows:
+            print(f"  {item['task_id']}")
+    else:
+        print(f"Migrated legacy approvals: {len(rows)}")
+        for tid in rows:
+            print(f"  {tid}")
     return 0
 
 

@@ -2240,6 +2240,20 @@ DEFAULT_CONFIG = {
         # worker process (if still running host-locally) is terminated
         # before the reclaim.  0 disables stale detection entirely.
         "dispatch_stale_timeout_seconds": 14400,
+        # Dispatch approval mode.
+        #   structured — require a structured approval row in
+        #                 ``task_dispatch_approvals`` before a ready task
+        #                 may be claimed/spawned; the dispatcher ignores
+        #                 any legacy approval marker in ``tasks.result``.
+        #   legacy    — read the legacy approval marker from
+        #                 ``tasks.result`` only. No structured approval
+        #                 is written or checked.
+        #   compat    — accept either structured approvals OR the legacy
+        #                 ``tasks.result`` marker. When the legacy marker
+        #                 is used, a warning/audit event is emitted so
+        #                 operators can migrate. Safe default for existing
+        #                 installs: does not change current behavior.
+        "dispatch_approval_mode": "compat",
     },
 
     # execute_code settings — controls the tool used for programmatic tool calls.

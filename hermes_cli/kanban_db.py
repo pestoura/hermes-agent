@@ -1324,6 +1324,24 @@ CREATE TABLE IF NOT EXISTS kanban_notify_subs (
     PRIMARY KEY (task_id, platform, chat_id, thread_id)
 );
 
+CREATE TABLE IF NOT EXISTS task_dispatch_approvals (
+    id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+    task_id            TEXT NOT NULL,
+    approved_by        TEXT NOT NULL,
+    approved_at_utc    INTEGER NOT NULL,
+    source             TEXT NOT NULL,
+    supervisory_run_id TEXT,
+    note               TEXT,
+    approval_version   INTEGER NOT NULL DEFAULT 1,
+    is_active          INTEGER NOT NULL DEFAULT 1,
+    created_at         INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_approvals_task_active
+    ON task_dispatch_approvals(task_id, is_active, created_at);
+CREATE INDEX IF NOT EXISTS idx_approvals_actor
+    ON task_dispatch_approvals(approved_by, approved_at_utc);
+
 CREATE INDEX IF NOT EXISTS idx_tasks_assignee_status ON tasks(assignee, status);
 CREATE INDEX IF NOT EXISTS idx_tasks_status          ON tasks(status);
 CREATE INDEX IF NOT EXISTS idx_links_child           ON task_links(child_id);
@@ -3879,6 +3897,284 @@ def _append_event(
         "VALUES (?, ?, ?, ?, ?)",
         (task_id, run_id, kind, pl, now),
     )
+
+
+# ---------------------------------------------------------------------------
+# Structured dispatch approval API
+# ---------------------------------------------------------------------------
+
+# Legacy marker embedded in ``tasks.result`` for backward compatibility.
+_LEGACY_APPROVAL_MARKER = "sppm-dispatch-approved"
+
+
+def has_active_dispatch_approval(conn: sqlite3.Connection, task_id: str) -> bool:
+    """Return True when ``task_id`` has an active structured approval."""
+    row = conn.execute(
+        "SELECT 1 FROM task_dispatch_approvals "
+        "WHERE task_id = ? AND is_active = 1 "
+        "ORDER BY created_at DESC LIMIT 1",
+        (task_id,),
+    ).fetchone()
+    return row is not None
+
+
+def get_dispatch_approval(conn: sqlite3.Connection, task_id: str) -> Optional[dict]:
+    """Return the latest active structured approval for ``task_id`` as a dict.
+
+    Returns ``None`` when no active approval exists.
+    """
+    row = conn.execute(
+        "SELECT id, task_id, approved_by, approved_at_utc, source, "
+        "       supervisory_run_id, note, approval_version, is_active, created_at "
+        "FROM task_dispatch_approvals "
+        "WHERE task_id = ? AND is_active = 1 "
+        "ORDER BY created_at DESC LIMIT 1",
+        (task_id,),
+    ).fetchone()
+    if row is None:
+        return None
+    return dict(row)
+
+
+def approve_dispatch(
+    conn: sqlite3.Connection,
+    task_id: str,
+    *,
+    actor: str,
+    source: str,
+    note: Optional[str] = None,
+    supervisory_run_id: Optional[str] = None,
+    approval_version: int = 1,
+) -> dict:
+    """Create an active structured dispatch approval.
+
+    Idempotent: a second equivalent approval returns the existing row
+    instead of creating a duplicate. A conflicting active approval
+    (different actor/source on an already-approved task) fails with
+    ``RuntimeError``.
+
+    Returns the persisted approval dict.
+
+    Caller must already be inside a write transaction.
+    """
+    if not actor or not actor.strip():
+        raise ValueError("actor is required")
+    if not source or not source.strip():
+        raise ValueError("source is required")
+    if not isinstance(approval_version, int) or approval_version < 1:
+        raise ValueError("approval_version must be a positive int")
+
+    now = int(time.time())
+    existing = conn.execute(
+        "SELECT id, approved_by, source FROM task_dispatch_approvals "
+        "WHERE task_id = ? AND is_active = 1 "
+        "ORDER BY created_at DESC LIMIT 1",
+        (task_id,),
+    ).fetchone()
+    if existing is not None:
+        if (
+            existing["approved_by"] == actor
+            and existing["source"] == source
+            and (existing["note"] == note if note is not None else True)
+        ):
+            return dict(existing)
+        raise RuntimeError(
+            f"task {task_id} already has an active approval "
+            f"id={existing['id']} from {existing['approved_by']} / {existing['source']}"
+        )
+
+    cur = conn.execute(
+        "INSERT INTO task_dispatch_approvals "
+        "(task_id, approved_by, approved_at_utc, source, supervisory_run_id, "
+        "note, approval_version, is_active, created_at) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (
+            task_id,
+            actor.strip(),
+            now,
+            source.strip(),
+            supervisory_run_id,
+            note,
+            int(approval_version),
+            1,
+            now,
+        ),
+    )
+    approval_id = int(cur.lastrowid or 0)
+    _append_event(
+        conn,
+        task_id,
+        "dispatch_approved",
+        {
+            "approval_id": approval_id,
+            "approved_by": actor.strip(),
+            "source": source.strip(),
+            "supervisory_run_id": supervisory_run_id,
+            "approval_version": int(approval_version),
+        },
+    )
+    row = conn.execute(
+        "SELECT * FROM task_dispatch_approvals WHERE id = ?",
+        (approval_id,),
+    ).fetchone()
+    return dict(row)
+
+
+def has_legacy_dispatch_approval(conn: sqlite3.Connection, task_id: str) -> bool:
+    """Return True when ``task_id.result`` contains the legacy approval marker."""
+    row = conn.execute(
+        "SELECT result FROM tasks WHERE id = ?",
+        (task_id,),
+    ).fetchone()
+    result = (row["result"] or "") if row else ""
+    return _LEGACY_APPROVAL_MARKER in result
+
+
+def set_legacy_dispatch_approval(
+    conn: sqlite3.Connection, task_id: str
+) -> None:
+    """Append the legacy approval marker to ``tasks.result`` without clobbering history.
+
+    Used by the CLI migration path only. Caller must already be inside a
+    write transaction.
+    """
+    row = conn.execute(
+        "SELECT result FROM tasks WHERE id = ?",
+        (task_id,),
+    ).fetchone()
+    result = (row["result"] or "") if row else ""
+    if result:
+        combined = result + "\n" + _LEGACY_APPROVAL_MARKER
+    else:
+        combined = _LEGACY_APPROVAL_MARKER
+    conn.execute(
+        "UPDATE tasks SET result = ? WHERE id = ?",
+        (combined, task_id),
+    )
+
+
+def migrate_legacy_dispatch_approvals_dry_run(
+    conn: sqlite3.Connection,
+) -> list[dict[str, object]]:
+    """Preview legacy approvals that would be migrated to structured rows.
+
+    Does not modify the database. Returns a list of dicts describing
+    the proposed migrations.
+    """
+    out: list[dict[str, object]] = []
+    rows = conn.execute(
+        "SELECT id, result FROM tasks "
+        "WHERE status NOT IN ('done', 'archived') "
+        "  AND result LIKE ?",
+        (f"%{_LEGACY_APPROVAL_MARKER}%",),
+    ).fetchall()
+    for row in rows:
+        out.append(
+            {
+                "task_id": row["id"],
+                "legacy_marker": _LEGACY_APPROVAL_MARKER,
+                "action": "migrate",
+            }
+        )
+    return out
+
+
+def migrate_legacy_dispatch_approvals_apply(
+    conn: sqlite3.Connection,
+    *,
+    actor: str = "legacy-migration",
+    source: str = "migrate_legacy_dispatch_approvals",
+) -> list[str]:
+    """Convert existing legacy markers into structured approvals.
+
+    Idempotent: tasks that already have an active structured approval
+    are skipped.
+
+    Returns the list of task ids migrated this call.
+    """
+    if not actor or not actor.strip():
+        actor = "legacy-migration"
+    rows = conn.execute(
+        "SELECT id FROM tasks "
+        "WHERE status NOT IN ('done', 'archived') "
+        "  AND result LIKE ?",
+        (f"%{_LEGACY_APPROVAL_MARKER}%",),
+    ).fetchall()
+    migrated: list[str] = []
+    for row in rows:
+        task_id = row["id"]
+        if has_active_dispatch_approval(conn, task_id):
+            continue
+        approve_dispatch(conn, task_id, actor=actor, source=source)
+        migrated.append(task_id)
+    return migrated
+
+
+_DISPATCH_APPROVAL_MODE_OVERRIDE: Optional[str] = None
+
+
+def _check_dispatch_approval_allowed(conn: sqlite3.Connection, task_id: str) -> tuple[bool, Optional[str]]:
+    """Return (allowed, reason) for whether dispatch may proceed.
+
+    Reads ``kanban.dispatch_approval_mode`` from config via the global
+    config loader when available. Falls back to ``structured`` when the
+    loader is unavailable or the config is missing.
+    """
+    mode = _DISPATCH_APPROVAL_MODE_OVERRIDE or "structured"
+    if mode is None:
+        try:
+            from hermes_cli.config import load_config as _load_config
+            cfg = _load_config()
+            mode = (
+                (cfg.get("kanban", {}) or {}).get("dispatch_approval_mode")
+                or "structured"
+            )
+        except Exception:
+            mode = "structured"
+
+    row = conn.execute(
+        "SELECT status, assignee, claim_lock, current_run_id FROM tasks WHERE id = ?",
+        (task_id,),
+    ).fetchone()
+    if row is None:
+        return False, "task_not_found"
+    if row["status"] in ("done", "archived"):
+        return False, f"task_status_{row['status']}_not_dispatchable"
+    if row["claim_lock"] is not None:
+        return False, "task_already_claimed_or_running"
+    if row["current_run_id"] is not None:
+        return False, "task_has_active_run"
+
+    has_structured = has_active_dispatch_approval(conn, task_id)
+    has_legacy = has_legacy_dispatch_approval(conn, task_id)
+
+    if mode == "structured":
+        if has_structured:
+            return True, None
+        return False, "no_active_dispatch_approval"
+    if mode == "legacy":
+        if has_legacy:
+            return True, None
+        return False, "no_legacy_dispatch_approval"
+    if mode == "compat":
+        if has_structured:
+            return True, None
+        if has_legacy:
+            _append_event(
+                conn,
+                task_id,
+                "dispatch_approved",
+                {
+                    "mode": "compat",
+                    "legacy_marker": _LEGACY_APPROVAL_MARKER,
+                    "warning": "legacy marker accepted in compat mode; "
+                               "migrate to structured approval",
+                },
+            )
+            return True, None
+        return False, "no_active_dispatch_approval"
+
+    return False, f"unknown_dispatch_approval_mode_{mode}"
 
 
 def _end_run(
@@ -8424,6 +8720,11 @@ def _dispatch_once_locked(
                     )
             continue
         if dry_run:
+            allowed, denial_reason = _check_dispatch_approval_allowed(conn, row["id"])
+            if not allowed:
+                if denial_reason:
+                    result.respawn_guarded.append((row["id"], f"approval:{denial_reason}"))
+                continue
             result.spawned.append((row["id"], row_assignee, ""))
             # Increment per-profile counter even in dry_run so the cap
             # check sees the would-be spawn on subsequent iterations.
@@ -8433,6 +8734,11 @@ def _dispatch_once_locked(
                 _per_profile_running[row_assignee] = (
                     _per_profile_running.get(row_assignee, 0) + 1
                 )
+            continue
+        allowed, denial_reason = _check_dispatch_approval_allowed(conn, row["id"])
+        if not allowed:
+            if denial_reason:
+                result.respawn_guarded.append((row["id"], f"approval:{denial_reason}"))
             continue
         claimed = claim_task(conn, row["id"], ttl_seconds=ttl_seconds)
         if claimed is None:
