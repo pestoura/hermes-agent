@@ -2308,19 +2308,25 @@ DEFAULT_CONFIG = {
         # worker process (if still running host-locally) is terminated
         # before the reclaim.  0 disables stale detection entirely.
         "dispatch_stale_timeout_seconds": 14400,
-        # Dispatch approval mode.
-        #   structured — require a structured approval row in
-        #                 ``task_dispatch_approvals`` before a ready task
-        #                 may be claimed/spawned; the dispatcher ignores
-        #                 any legacy approval marker in ``tasks.result``.
-        #   legacy    — read the legacy approval marker from
-        #                 ``tasks.result`` only. No structured approval
-        #                 is written or checked.
-        #   compat    — accept either structured approvals OR the legacy
-        #                 ``tasks.result`` marker. When the legacy marker
-        #                 is used, a warning/audit event is emitted so
-        #                 operators can migrate. Safe default for existing
-        #                 installs: does not change current behavior.
+        # Dispatch approval mode. Applies uniformly to all three state
+        # advances: ``ready`` dispatch, ``review`` dispatch and
+        # ``todo``/``blocked`` -> ``ready`` promotion.
+        #   structured — require an active row in ``task_dispatch_approvals``
+        #                 before a card may be promoted, claimed or spawned
+        #                 (ready or review); any legacy marker in
+        #                 ``tasks.result`` is ignored.
+        #   legacy    — require the legacy approval marker
+        #                 ``sppm-dispatch-approved`` in ``tasks.result``.
+        #                 No structured approval is written or checked.
+        #   compat    — permissive but audited: accepts either a structured
+        #                 approval OR the legacy marker, and still allows
+        #                 dispatch/promotion when neither is present, emitting
+        #                 an audit event each time so operators can see what
+        #                 compat is letting through while they migrate.
+        #                 Safe default for existing installs: does not change
+        #                 current behavior.
+        # An unreadable or invalid config value falls **closed** onto
+        # ``structured`` rather than onto the permissive default.
         "dispatch_approval_mode": "compat",
     },
 
