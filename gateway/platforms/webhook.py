@@ -702,6 +702,14 @@ class WebhookAdapter(BasePlatformAdapter):
             or request.headers.get("X-GitLab-Event", "")
             or payload.get("event_type", "")
             or payload.get("type", "")
+            # Jira Cloud and several other providers send no event header and
+            # use neither ``event_type`` nor ``type``: Jira puts the event name
+            # in ``webhookEvent`` (e.g. "jira:issue_updated"), and a number of
+            # generic senders use a bare ``event`` key. Without these the route
+            # sees "unknown" and any ``events:`` filter silently drops the
+            # delivery. Checked last so existing precedence is unchanged.
+            or payload.get("event", "")
+            or payload.get("webhookEvent", "")
             or "unknown"
         )
         allowed_events = route_config.get("events", [])
