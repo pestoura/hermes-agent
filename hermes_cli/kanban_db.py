@@ -89,6 +89,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Optional
 
+from hermes_cli.config_defaults import DEFAULT_CONFIG as _DEFAULT_CONFIG
 from hermes_cli.sqlite_util import add_column_if_missing as _add_column_if_missing
 from toolsets import get_toolset_names
 
@@ -4206,26 +4207,94 @@ def migrate_legacy_dispatch_approvals_apply(
 
 _DISPATCH_APPROVAL_MODE_OVERRIDE: Optional[str] = None
 
+# Sentinel mode used when the config read itself fails. Dispatch is a
+# side-effecting, resource-spawning action: a transient config-read error must
+# never be the reason a task gets dispatched, so an unreadable config falls
+# **closed** onto the most restrictive mode rather than onto the permissive
+# ``compat`` default.
+_DISPATCH_APPROVAL_FAILSAFE_MODE = "structured"
 
-def _check_dispatch_approval_allowed(conn: sqlite3.Connection, task_id: str) -> tuple[bool, Optional[str]]:
+_VALID_DISPATCH_APPROVAL_MODES = frozenset({"structured", "legacy", "compat"})
+
+
+def _resolve_dispatch_approval_mode() -> tuple[str, Optional[str]]:
+    """Resolve the live ``kanban.dispatch_approval_mode``.
+
+    Returns ``(mode, config_error)``. ``config_error`` is ``None`` on a clean
+    read and a short reason string when the config could not be read — the
+    caller surfaces it in the denial reason so an operator sees *why* dispatch
+    fell back to the strictest mode instead of silently observing a stalled
+    board.
+
+    Read fresh on every check (rather than captured once) so flipping the mode
+    to lock down a runaway board takes effect on the next tick without a
+    gateway restart, matching how ``kanban.auto_decompose`` behaves.
+
+    Resolution order:
+
+    1. ``_DISPATCH_APPROVAL_MODE_OVERRIDE`` — test/CLI override, wins outright.
+    2. ``kanban.dispatch_approval_mode`` from config. An absent key keeps the
+       shipped default (``compat``), so existing installs are unaffected.
+    3. On a config-read error or an unrecognised value, fall closed onto
+       ``structured`` and report the reason.
+    """
+    if _DISPATCH_APPROVAL_MODE_OVERRIDE:
+        return _DISPATCH_APPROVAL_MODE_OVERRIDE, None
+    try:
+        # Deferred import: hermes_cli.config imports kanban paths at module
+        # scope, so a top-level import here is a cycle.
+        from hermes_cli.config import load_config as _load_config
+
+        cfg = _load_config()
+    except ImportError:
+        # Config layer genuinely unavailable (e.g. kanban_db used standalone).
+        # Nothing to honour, so use the fail-safe mode without flagging an
+        # operator-visible config error.
+        return _DISPATCH_APPROVAL_FAILSAFE_MODE, None
+    except Exception as exc:
+        _log.error(
+            "kanban dispatch: cannot read kanban.dispatch_approval_mode (%s); "
+            "falling closed to %r",
+            exc,
+            _DISPATCH_APPROVAL_FAILSAFE_MODE,
+        )
+        return _DISPATCH_APPROVAL_FAILSAFE_MODE, "config_unreadable"
+
+    kcfg = cfg.get("kanban", {}) if isinstance(cfg, dict) else {}
+    mode = (kcfg or {}).get("dispatch_approval_mode")
+    if mode is None:
+        # Key absent → shipped default. Sourced from config_defaults so the
+        # default lives in exactly one place.
+        mode = (_DEFAULT_CONFIG.get("kanban", {}) or {}).get(
+            "dispatch_approval_mode", "compat"
+        )
+    if not isinstance(mode, str) or mode not in _VALID_DISPATCH_APPROVAL_MODES:
+        _log.error(
+            "kanban dispatch: invalid kanban.dispatch_approval_mode %r; "
+            "falling closed to %r",
+            mode,
+            _DISPATCH_APPROVAL_FAILSAFE_MODE,
+        )
+        return _DISPATCH_APPROVAL_FAILSAFE_MODE, "invalid_dispatch_approval_mode"
+    return mode, None
+
+
+def _check_dispatch_approval_allowed(
+    conn: sqlite3.Connection,
+    task_id: str,
+    *,
+    dry_run: bool = False,
+) -> tuple[bool, Optional[str]]:
     """Return (allowed, reason) for whether dispatch may proceed.
 
-    Reads ``kanban.dispatch_approval_mode`` from config via the global
-    config loader when available. Falls back to ``structured`` when the
-    loader is unavailable or the config is missing.
-    """
-    mode = _DISPATCH_APPROVAL_MODE_OVERRIDE or "structured"
-    if mode is None:
-        try:
-            from hermes_cli.config import load_config as _load_config
-            cfg = _load_config()
-            mode = (
-                (cfg.get("kanban", {}) or {}).get("dispatch_approval_mode")
-                or "structured"
-            )
-        except Exception:
-            mode = "structured"
+    The mode comes from :func:`_resolve_dispatch_approval_mode`, which honours
+    ``kanban.dispatch_approval_mode`` and falls **closed** when the config
+    cannot be read or holds an unrecognised value.
 
+    ``dry_run`` suppresses the audit events this check would otherwise write:
+    a preview tick must not mutate the event log.
+    """
+    mode, config_error = _resolve_dispatch_approval_mode()
     row = conn.execute(
         "SELECT status, assignee, claim_lock, current_run_id FROM tasks WHERE id = ?",
         (task_id,),
@@ -4242,32 +4311,72 @@ def _check_dispatch_approval_allowed(conn: sqlite3.Connection, task_id: str) -> 
     has_structured = has_active_dispatch_approval(conn, task_id)
     has_legacy = has_legacy_dispatch_approval(conn, task_id)
 
+    def _deny(reason: str) -> tuple[bool, Optional[str]]:
+        """Deny dispatch, tagging the reason when config forced the mode.
+
+        A board that stops dispatching because its config is unreadable looks
+        identical to one that is simply awaiting approvals. Suffixing the
+        reason makes the cause visible in ``respawn_guarded`` and in the
+        ``hermes kanban tail`` event stream.
+        """
+        if config_error:
+            return False, f"{reason}:{config_error}"
+        return False, reason
+
     if mode == "structured":
         if has_structured:
             return True, None
-        return False, "no_active_dispatch_approval"
+        return _deny("no_active_dispatch_approval")
     if mode == "legacy":
         if has_legacy:
             return True, None
-        return False, "no_legacy_dispatch_approval"
+        return _deny("no_legacy_dispatch_approval")
     if mode == "compat":
         if has_structured:
             return True, None
         if has_legacy:
+            if not dry_run:
+                _append_event(
+                    conn,
+                    task_id,
+                    "dispatch_approved",
+                    {
+                        "mode": "compat",
+                        "legacy_marker": _LEGACY_APPROVAL_MARKER,
+                        "warning": "legacy marker accepted in compat mode; "
+                                   "migrate to structured approval",
+                    },
+                )
+            return True, None
+        # Compat is the shipped default and is documented as "does not change
+        # current behavior" for existing installs. Before the approval gate
+        # existed, a ready task with no claim and no active run dispatched
+        # unconditionally — so compat must NOT block a board that simply is
+        # not using the approval workflow, otherwise merely upgrading Hermes
+        # silently freezes every existing board. Enforcement is opt-in: set
+        # ``kanban.dispatch_approval_mode`` to ``structured`` (or ``legacy``)
+        # to make an approval mandatory. An audit event records each
+        # ungated dispatch so operators can see what compat is letting
+        # through while they migrate.
+        if not dry_run:
             _append_event(
                 conn,
                 task_id,
                 "dispatch_approved",
                 {
                     "mode": "compat",
-                    "legacy_marker": _LEGACY_APPROVAL_MARKER,
-                    "warning": "legacy marker accepted in compat mode; "
-                               "migrate to structured approval",
+                    "ungated": True,
+                    "warning": "no approval found; compat mode does not "
+                               "enforce. Set kanban.dispatch_approval_mode="
+                               "structured to require approvals.",
                 },
             )
-            return True, None
-        return False, "no_active_dispatch_approval"
+        return True, None
 
+    # Unreachable: _resolve_dispatch_approval_mode only ever returns a member
+    # of _VALID_DISPATCH_APPROVAL_MODES. Kept as a fail-closed backstop so a
+    # future mode added to the set but not handled above denies rather than
+    # falls through to an implicit allow.
     return False, f"unknown_dispatch_approval_mode_{mode}"
 
 
@@ -8947,7 +9056,9 @@ def _dispatch_once_locked(
                     )
             continue
         if dry_run:
-            allowed, denial_reason = _check_dispatch_approval_allowed(conn, row["id"])
+            allowed, denial_reason = _check_dispatch_approval_allowed(
+                conn, row["id"], dry_run=True
+            )
             if not allowed:
                 if denial_reason:
                     result.respawn_guarded.append((row["id"], f"approval:{denial_reason}"))
@@ -8962,7 +9073,12 @@ def _dispatch_once_locked(
                     _per_profile_running.get(row_assignee, 0) + 1
                 )
             continue
-        allowed, denial_reason = _check_dispatch_approval_allowed(conn, row["id"])
+        with write_txn(conn):
+            # The approval check may append an audit event (compat mode), so
+            # it runs inside the board's write transaction.
+            allowed, denial_reason = _check_dispatch_approval_allowed(
+                conn, row["id"]
+            )
         if not allowed:
             if denial_reason:
                 result.respawn_guarded.append((row["id"], f"approval:{denial_reason}"))
