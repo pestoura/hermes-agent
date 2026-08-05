@@ -4380,6 +4380,100 @@ def _check_dispatch_approval_allowed(
     return False, f"unknown_dispatch_approval_mode_{mode}"
 
 
+def _dispatch_gate_allows(
+    conn: sqlite3.Connection,
+    task_id: str,
+    *,
+    dry_run: bool,
+    audit_denial: bool = False,
+) -> tuple[bool, Optional[str]]:
+    """Single entry point every dispatch path uses for the approval gate.
+
+    Wraps :func:`_check_dispatch_approval_allowed` so the ``ready`` loop, the
+    ``review`` loop and ``recompute_ready`` all resolve the mode, the
+    fail-closed behaviour and the denial reason identically — the parity bug
+    was that only ``ready`` consulted the gate at all.
+
+    ``dry_run`` suppresses every write (audit events included): a preview tick
+    must leave the event log and the board untouched.
+
+    ``audit_denial`` additionally records a ``dispatch_denied`` event with
+    ``reason='approval:<cause>'`` in real mode, so an operator reading
+    ``hermes kanban tail`` sees why a card did not spawn. The ``ready`` loop
+    keeps its historical behaviour (result-only, no extra event); the
+    ``review`` loop opts in.
+    """
+    if dry_run:
+        allowed, reason = _check_dispatch_approval_allowed(
+            conn, task_id, dry_run=True
+        )
+    else:
+        with write_txn(conn):
+            # The check may append a compat-mode audit event, so it runs
+            # inside the board's write transaction.
+            allowed, reason = _check_dispatch_approval_allowed(conn, task_id)
+    if not allowed and audit_denial and not dry_run:
+        with write_txn(conn):
+            _append_event(
+                conn,
+                task_id,
+                "dispatch_denied",
+                {"reason": f"approval:{reason}" if reason else "approval"},
+            )
+    return allowed, reason
+
+
+def _promotion_gate_allows(
+    conn: sqlite3.Connection,
+    task_id: str,
+    *,
+    dry_run: bool,
+) -> tuple[bool, Optional[str]]:
+    """Approval gate for ``todo``/``blocked`` -> ``ready`` promotion.
+
+    The caller (``recompute_ready``) is already inside its own
+    ``write_txn``, so this helper never opens a nested transaction: it
+    appends its audit event directly.
+
+    ``recompute_ready`` used to promote unconditionally, which let a board
+    move work into ``ready`` with no approval and made the enforcement modes
+    a half-measure: the card could not spawn, but it still advanced.
+
+    Semantics per mode:
+
+    * ``compat``   — never blocks promotion (shipped default must not freeze
+      existing boards) but records an audit event so operators can see what
+      compat let through while they migrate.
+    * ``legacy``   — promotion requires the legacy marker in ``tasks.result``.
+    * ``structured`` — promotion requires an active row in
+      ``task_dispatch_approvals``.
+    * unreadable / invalid config — falls closed onto ``structured``.
+    """
+    mode, config_error = _resolve_dispatch_approval_mode()
+    if mode == "compat" and not config_error:
+        if not dry_run:
+            _append_event(
+                conn,
+                task_id,
+                "promotion_ungated",
+                {
+                    "mode": "compat",
+                    "warning": "promotion not gated in compat mode; set "
+                               "kanban.dispatch_approval_mode=structured "
+                               "to require approvals.",
+                },
+            )
+        return True, None
+    # legacy / structured (including the fail-closed fallback): reuse the
+    # dispatch checker in preview mode so promotion never writes the
+    # compat-mode approval audit trail on behalf of a spawn that hasn't
+    # happened yet.
+    allowed, reason = _check_dispatch_approval_allowed(
+        conn, task_id, dry_run=True
+    )
+    return allowed, reason
+
+
 def _end_run(
     conn: sqlite3.Connection,
     task_id: str,
@@ -4539,6 +4633,7 @@ def _has_sticky_block(conn: sqlite3.Connection, task_id: str) -> bool:
 
 def recompute_ready(
     conn: sqlite3.Connection, failure_limit: int = None,
+    *, dry_run: bool = False,
 ) -> int:
     """Promote ``todo`` tasks to ``ready`` when all parents are ``done`` or ``archived``.
 
@@ -4567,6 +4662,13 @@ def recompute_ready(
       2. caller-supplied ``failure_limit`` (the dispatcher passes the
          ``kanban.failure_limit`` config value through ``dispatch_once``)
       3. ``DEFAULT_FAILURE_LIMIT``
+
+    Promotion additionally honours the dispatch approval gate (see
+    :func:`_promotion_gate_allows`): in ``legacy``/``structured`` an
+    unapproved task stays where it is, in ``compat`` it is promoted and
+    audited. ``dry_run=True`` makes the whole pass read-only — it returns
+    the count that *would* be promoted and writes neither status changes
+    nor events.
     """
     if failure_limit is None:
         failure_limit = DEFAULT_FAILURE_LIMIT
@@ -4592,6 +4694,16 @@ def recompute_ready(
                 (task_id,),
             ).fetchall()
             if all(p["status"] in ("done", "archived") for p in parents):
+                # Approval parity (#P1.1): promotion is a state advance, so
+                # it honours the same gate as dispatch. compat stays
+                # permissive-but-audited; legacy/structured (and the
+                # fail-closed fallback for an unreadable/invalid config)
+                # require the corresponding approval.
+                allowed, _gate_reason = _promotion_gate_allows(
+                    conn, task_id, dry_run=dry_run,
+                )
+                if not allowed:
+                    continue
                 if cur_status == "blocked":
                     # Don't auto-recover tasks that have hit the
                     # circuit-breaker failure limit.  Without this
@@ -4609,17 +4721,20 @@ def recompute_ready(
                     )
                     if failures >= effective_limit:
                         continue
-                    conn.execute(
-                        "UPDATE tasks SET status = 'ready' "
-                        "WHERE id = ? AND status = 'blocked'",
-                        (task_id,),
-                    )
+                    if not dry_run:
+                        conn.execute(
+                            "UPDATE tasks SET status = 'ready' "
+                            "WHERE id = ? AND status = 'blocked'",
+                            (task_id,),
+                        )
                 else:
-                    conn.execute(
-                        "UPDATE tasks SET status = 'ready' WHERE id = ? AND status = 'todo'",
-                        (task_id,),
-                    )
-                _append_event(conn, task_id, "promoted", None)
+                    if not dry_run:
+                        conn.execute(
+                            "UPDATE tasks SET status = 'ready' WHERE id = ? AND status = 'todo'",
+                            (task_id,),
+                        )
+                if not dry_run:
+                    _append_event(conn, task_id, "promoted", None)
                 promoted += 1
     return promoted
 
@@ -8878,7 +8993,9 @@ def _dispatch_once_locked(
     if _crash_rate_limited:
         result.rate_limited.extend(_crash_rate_limited)
     result.timed_out = enforce_max_runtime(conn)
-    result.promoted = recompute_ready(conn, failure_limit=failure_limit)
+    result.promoted = recompute_ready(
+        conn, failure_limit=failure_limit, dry_run=dry_run,
+    )
 
     # Count tasks already running so max_spawn enforces concurrency rather
     # than a per-tick spawn budget. See the docstring above for the full
@@ -9056,7 +9173,7 @@ def _dispatch_once_locked(
                     )
             continue
         if dry_run:
-            allowed, denial_reason = _check_dispatch_approval_allowed(
+            allowed, denial_reason = _dispatch_gate_allows(
                 conn, row["id"], dry_run=True
             )
             if not allowed:
@@ -9073,12 +9190,11 @@ def _dispatch_once_locked(
                     _per_profile_running.get(row_assignee, 0) + 1
                 )
             continue
-        with write_txn(conn):
-            # The approval check may append an audit event (compat mode), so
-            # it runs inside the board's write transaction.
-            allowed, denial_reason = _check_dispatch_approval_allowed(
-                conn, row["id"]
-            )
+        # Approval gate — same resolver/checker as the review loop and the
+        # promotion gate (#P1.1 parity).
+        allowed, denial_reason = _dispatch_gate_allows(
+            conn, row["id"], dry_run=False
+        )
         if not allowed:
             if denial_reason:
                 result.respawn_guarded.append((row["id"], f"approval:{denial_reason}"))
@@ -9173,7 +9289,31 @@ def _dispatch_once_locked(
             result.skipped_nonspawnable.append(row["id"])
             continue
         if dry_run:
+            # Same gate as the ready loop, preview-only: no claim, no event.
+            allowed, denial_reason = _dispatch_gate_allows(
+                conn, row["id"], dry_run=True
+            )
+            if not allowed:
+                if denial_reason:
+                    result.respawn_guarded.append(
+                        (row["id"], f"approval:{denial_reason}")
+                    )
+                continue
             result.spawned.append((row["id"], row["assignee"], ""))
+            continue
+        # Approval gate for the review column (#P1.1). Before this, a card
+        # that could never be dispatched from ``ready`` could still spawn a
+        # review agent, which defeated the whole gate. A denial is audited
+        # (``dispatch_denied`` with ``approval:<cause>``) and the row stays
+        # in ``review`` untouched.
+        allowed, denial_reason = _dispatch_gate_allows(
+            conn, row["id"], dry_run=False, audit_denial=True
+        )
+        if not allowed:
+            if denial_reason:
+                result.respawn_guarded.append(
+                    (row["id"], f"approval:{denial_reason}")
+                )
             continue
         claimed = claim_review_task(conn, row["id"], ttl_seconds=ttl_seconds)
         if claimed is None:
